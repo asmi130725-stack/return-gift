@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     // Return the converted image as a response
     const fileName = file.name.replace(/\.(heic|heif)$/i, '.jpg')
     
-    return new NextResponse(convertedBuffer, {
+    return new NextResponse(convertedBuffer.buffer, {
       headers: {
         'Content-Type': 'image/jpeg',
         'Content-Disposition': `attachment; filename="${fileName}"`,
