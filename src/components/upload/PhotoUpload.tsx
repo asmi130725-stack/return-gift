@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { isValidImageType, formatFileSize, convertHeicToJpeg } from '@/lib/utils'
+import { isValidImageType, formatFileSize, convertHeicToJpeg, isHeicFile } from '@/lib/utils'
 
 interface PhotoUploadProps {
   onPhotosSelected: (files: File[]) => void
@@ -55,12 +55,15 @@ export default function PhotoUpload({
         // Convert HEIC files to JPEG
         const processedFiles = await Promise.all(
           validFiles.map(async (file) => {
-            if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+            if (isHeicFile(file)) {
               try {
-                return await convertHeicToJpeg(file)
+                console.log('Detected HEIC file, converting:', file.name)
+                const converted = await convertHeicToJpeg(file)
+                console.log('Conversion successful for:', file.name)
+                return converted
               } catch (err) {
-                console.error('HEIC conversion failed:', err)
-                setError('Failed to convert HEIC image. Please try a JPEG or PNG instead.')
+                console.error('HEIC conversion failed for file:', file.name, err)
+                setError(`Failed to convert ${file.name}. The HEIC format may not be supported. Please try uploading as JPEG or PNG.`)
                 return null
               }
             }
