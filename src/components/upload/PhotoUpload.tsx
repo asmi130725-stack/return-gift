@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { isValidImageType, formatFileSize } from '@/lib/utils'
+import { isValidImageType, formatFileSize, convertHeicToJpeg } from '@/lib/utils'
 
 interface PhotoUploadProps {
   onPhotosSelected: (files: File[]) => void
@@ -19,37 +19,74 @@ export default function PhotoUpload({
 }: PhotoUploadProps) {
   const [previews, setPreviews] = useState<string[]>([])
   const [error, setError] = useState<string>('')
+  const [converting, setConverting] = useState(false)
 
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
+    async (acceptedFiles: File[]) => {
       setError('')
+      setConverting(true)
 
-      // Validate file types
-      const validFiles = acceptedFiles.filter((file) => {
-        if (!isValidImageType(file)) {
-          setError('Some files were skipped. Please upload only images (JPEG, PNG, WebP, HEIC).')
-          return false
+      try {
+        // Validate file types
+        const validFiles = acceptedFiles.filter((file) => {
+          if (!isValidImageType(file)) {
+            setError('Some files were skipped. Please upload only images (JPEG, PNG, WebP, HEIC).')
+            return false
+          }
+          if (file.size > maxSize) {
+            setError(`Some files were skipped. Maximum file size is ${formatFileSize(maxSize)}.`)
+            return false
+          }
+          return true
+        })
+
+        if (validFiles.length === 0) {
+          setConverting(false)
+          return
         }
-        if (file.size > maxSize) {
-          setError(`Some files were skipped. Maximum file size is ${formatFileSize(maxSize)}.`)
-          return false
+
+        // Check total count
+        if (previews.length + validFiles.length > maxFiles) {
+          setError(`Maximum ${maxFiles} photos allowed.`)
+          setConverting(false)
+          return
         }
-        return true
-      })
 
-      if (validFiles.length === 0) return
+        // Convert HEIC files to JPEG
+        const processedFiles = await Promise.all(
+          validFiles.map(async (file) => {
+            if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+              try {
+                return await convertHeicToJpeg(file)
+              } catch (err) {
+                console.error('HEIC conversion failed:', err)
+                setError('Failed to convert HEIC image. Please try a JPEG or PNG instead.')
+                return null
+              }
+            }
+            return file
+          })
+        )
 
-      // Check total count
-      if (previews.length + validFiles.length > maxFiles) {
-        setError(`Maximum ${maxFiles} photos allowed.`)
-        return
+        // Filter out any failed conversions
+        const successfulFiles = processedFiles.filter((file): file is File => file !== null)
+
+        if (successfulFiles.length === 0) {
+          setConverting(false)
+          return
+        }
+
+        // Create preview URLs
+        const newPreviews = successfulFiles.map((file: File) => URL.createObjectURL(file))
+        setPreviews((prev) => [...prev, ...newPreviews])
+        
+        onPhotosSelected(successfulFiles)
+      } catch (err) {
+        console.error('Error processing files:', err)
+        setError('Failed to process images. Please try again.')
+      } finally {
+        setConverting(false)
       }
-
-      // Create preview URLs
-      const newPreviews = validFiles.map((file) => URL.createObjectURL(file))
-      setPreviews((prev) => [...prev, ...newPreviews])
-      
-      onPhotosSelected(validFiles)
     },
     [maxFiles, maxSize, onPhotosSelected, previews.length]
   )
@@ -61,6 +98,7 @@ export default function PhotoUpload({
     },
     maxFiles,
     multiple: true,
+    disabled: converting,
   })
 
   const removePreview = (index: number) => {
@@ -74,7 +112,8 @@ export default function PhotoUpload({
         {...getRootProps()}
         className={`
           relative border-3 border-dashed rounded-2xl p-8 sm:p-12 
-          transition-all duration-200 cursor-pointer
+          transition-all duration-200
+          ${converting ? 'cursor-wait opacity-70' : 'cursor-pointer'}
           ${
             isDragActive
               ? 'border-pink-400 bg-pink-50'
@@ -107,13 +146,13 @@ export default function PhotoUpload({
 
           {/* Text */}
           <p className="text-base sm:text-lg font-medium text-gray-700 mb-2">
-            {isDragActive ? 'Drop your photos here' : 'Tap to upload photos'}
+            {converting ? 'Converting images...' : isDragActive ? 'Drop your photos here' : 'Tap to upload photos'}
           </p>
           <p className="text-sm text-gray-500 mb-1">
-            or drag and drop
+            {converting ? 'Please wait' : 'or drag and drop'}
           </p>
           <p className="text-xs text-gray-400">
-            JPEG, PNG, WebP up to {formatFileSize(maxSize)} • Max {maxFiles} photos
+            JPEG, PNG, WebP, HEIC up to {formatFileSize(maxSize)} • Max {maxFiles} photos
           </p>
 
           {/* Mobile Camera Tip */}
