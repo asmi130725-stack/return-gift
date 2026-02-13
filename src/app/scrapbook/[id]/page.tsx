@@ -179,7 +179,7 @@ export default function ScrapbookPage() {
     setSelectedFiles([])
     setEditForm({
       title: event?.title || '',
-      date: event?.date || '',
+      date: event?.date ? new Date(event.date).toISOString().split('T')[0] : '',
       notes: event?.notes || '',
       mood: event?.mood || '',
     })
