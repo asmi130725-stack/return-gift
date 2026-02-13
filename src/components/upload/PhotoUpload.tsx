@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { isValidImageType, formatFileSize, convertHeicToJpeg, isHeicFile } from '@/lib/utils'
+import { isValidImageType, formatFileSize } from '@/lib/utils'
 
 interface PhotoUploadProps {
   onPhotosSelected: (files: File[]) => void
@@ -19,77 +19,53 @@ export default function PhotoUpload({
 }: PhotoUploadProps) {
   const [previews, setPreviews] = useState<string[]>([])
   const [error, setError] = useState<string>('')
-  const [converting, setConverting] = useState(false)
 
   const onDrop = useCallback(
-    async (acceptedFiles: File[]) => {
+    (acceptedFiles: File[]) => {
       setError('')
-      setConverting(true)
 
-      try {
-        // Validate file types
-        const validFiles = acceptedFiles.filter((file) => {
-          if (!isValidImageType(file)) {
-            setError('Some files were skipped. Please upload only images (JPEG, PNG, WebP, HEIC).')
-            return false
-          }
-          if (file.size > maxSize) {
-            setError(`Some files were skipped. Maximum file size is ${formatFileSize(maxSize)}.`)
-            return false
-          }
-          return true
-        })
+      // Check for HEIC files and reject them
+      const heicFiles = acceptedFiles.filter(file => 
+        file.name.toLowerCase().endsWith('.heic') || 
+        file.name.toLowerCase().endsWith('.heif') ||
+        file.type === 'image/heic' || 
+        file.type === 'image/heif'
+      )
 
-        if (validFiles.length === 0) {
-          setConverting(false)
-          return
-        }
-
-        // Check total count
-        if (previews.length + validFiles.length > maxFiles) {
-          setError(`Maximum ${maxFiles} photos allowed.`)
-          setConverting(false)
-          return
-        }
-        
-        // Convert HEIC files to JPEG (server-side)
-        const processedFiles = await Promise.all(
-          validFiles.map(async (file) => {
-            if (isHeicFile(file)) {
-              try {
-                console.log('Detected HEIC file, converting via server:', file.name)
-                const converted = await convertHeicToJpeg(file)
-                console.log('Conversion successful for:', file.name)
-                return converted
-              } catch (err: any) {
-                console.error('HEIC conversion failed for file:', file.name, err)
-                setError(`Failed to convert ${file.name}. Please try again or use a different image.`)
-                return null
-              }
-            }
-            return file
-          })
+      if (heicFiles.length > 0) {
+        setError(
+          `HEIC format not supported. On iPhone: Settings → Camera → Formats → select "Most Compatible" to save as JPEG. ` +
+          `Or share photo → Options → "Most Compatible" before uploading.`
         )
+        return
+      }
 
-        // Filter out any failed conversions
-        const successfulFiles = processedFiles.filter((file): file is File => file !== null)
-
-        if (successfulFiles.length === 0) {
-          setConverting(false)
-          return
+      // Validate file types
+      const validFiles = acceptedFiles.filter((file) => {
+        if (!isValidImageType(file)) {
+          setError('Some files were skipped. Please upload only images (JPEG, PNG, WebP).')
+          return false
         }
+        if (file.size > maxSize) {
+          setError(`Some files were skipped. Maximum file size is ${formatFileSize(maxSize)}.`)
+          return false
+        }
+        return true
+      })
 
-        // Create preview URLs
-        const newPreviews = successfulFiles.map((file: File) => URL.createObjectURL(file))
+      if (validFiles.length === 0) return
+
+      // Check total count
+      if (previews.length + validFiles.length > maxFiles) {
+        setError(`Maximum ${maxFiles} photos allowed.`)
+        return
+      }
+
+      // Create preview URLs
+      const newPreviews = validFiles.map((file) => URL.createObjectURL(file))
         setPreviews((prev) => [...prev, ...newPreviews])
         
-        onPhotosSelected(successfulFiles)
-      } catch (err) {
-        console.error('Error processing files:', err)
-        setError('Failed to process images. Please try again.')
-      } finally {
-        setConverting(false)
-      }
+        onPhotosSelected(validFiles)
     },
     [maxFiles, maxSize, onPhotosSelected, previews.length]
   )
@@ -97,11 +73,10 @@ export default function PhotoUpload({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp', '.heic'],
+      'image/*': ['.jpeg', '.jpg', '.png', '.webp'],
     },
     maxFiles,
     multiple: true,
-    disabled: converting,
   })
 
   const removePreview = (index: number) => {
@@ -115,8 +90,7 @@ export default function PhotoUpload({
         {...getRootProps()}
         className={`
           relative border-3 border-dashed rounded-2xl p-8 sm:p-12 
-          transition-all duration-200
-          ${converting ? 'cursor-wait opacity-70' : 'cursor-pointer'}
+          transition-all duration-200 cursor-pointer
           ${
             isDragActive
               ? 'border-pink-400 bg-pink-50'
@@ -149,13 +123,13 @@ export default function PhotoUpload({
 
           {/* Text */}
           <p className="text-base sm:text-lg font-medium text-gray-700 mb-2">
-            {converting ? 'Converting images...' : isDragActive ? 'Drop your photos here' : 'Tap to upload photos'}
+            {isDragActive ? 'Drop your photos here' : 'Tap to upload photos'}
           </p>
           <p className="text-sm text-gray-500 mb-1">
-            {converting ? 'Please wait' : 'or drag and drop'}
+            or drag and drop
           </p>
           <p className="text-xs text-gray-400">
-            JPEG, PNG, WebP, HEIC up to {formatFileSize(maxSize)} • Max {maxFiles} photos
+            JPEG, PNG, WebP up to {formatFileSize(maxSize)} • Max {maxFiles} photos
           </p>
 
           {/* Mobile Camera Tip */}
