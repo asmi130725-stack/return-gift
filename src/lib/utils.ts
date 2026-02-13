@@ -70,51 +70,41 @@ export function isHeicFile(file: File): boolean {
 }
 
 /**
- * Convert HEIC image to JPEG
+ * Convert HEIC image to JPEG using server-side API
  */
 export async function convertHeicToJpeg(file: File): Promise<File> {
   try {
-    console.log('Starting HEIC conversion for:', file.name, 'Type:', file.type, 'Size:', file.size)
+    console.log('Starting server-side HEIC conversion for:', file.name, 'Type:', file.type, 'Size:', file.size)
     
-    // Dynamic import to reduce bundle size
-    let heic2any
-    try {
-      heic2any = (await import('heic2any')).default
-      console.log('heic2any library loaded successfully')
-    } catch (importError) {
-      console.error('Failed to import heic2any library:', importError)
-      throw new Error('HEIC converter library failed to load.')
-    }
+    // Send to server for conversion
+    const formData = new FormData()
+    formData.append('file', file)
 
-    const convertedBlob = await heic2any({
-      blob: file,
-      toType: 'image/jpeg',
-      quality: 0.8,
+    const response = await fetch('/api/convert-heic', {
+      method: 'POST',
+      body: formData,
     })
 
-    // heic2any can return Blob or Blob[], handle both cases
-    const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob
+    if (!response.ok) {
+      throw new Error(`Conversion failed: ${response.statusText}`)
+    }
 
+    // Get the converted image as a blob
+    const blob = await response.blob()
+    
     // Create a new File object from the converted blob
     const fileName = file.name.replace(/\.(heic|heif)$/i, '.jpg')
     const convertedFile = new File([blob], fileName, { type: 'image/jpeg' })
     
-    console.log('HEIC conversion successful:', convertedFile.name, 'New size:', convertedFile.size)
+    console.log('HEIC conversion successful:', convertedFile.name, 'Original:', file.size, 'Converted:', convertedFile.size)
     return convertedFile
   } catch (error: any) {
     console.error('HEIC conversion error details:', {
       fileName: file.name,
       fileType: file.type,
       fileSize: file.size,
-      error: error,
-      errorCode: error?.code,
-      errorMessage: error?.message
+      error: error
     })
-    
-    // Re-throw with more helpful message
-    if (error?.message?.includes('format not supported') || error?.code === 2) {
-      throw new Error('This HEIC format is not supported by the browser converter.')
-    }
-    throw error
+    throw new Error(`Failed to convert HEIC image: ${error.message}`)
   }
 }

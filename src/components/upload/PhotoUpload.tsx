@@ -20,12 +20,10 @@ export default function PhotoUpload({
   const [previews, setPreviews] = useState<string[]>([])
   const [error, setError] = useState<string>('')
   const [converting, setConverting] = useState(false)
-  const [skippedHeicFiles, setSkippedHeicFiles] = useState<string[]>([])
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       setError('')
-      setSkippedHeicFiles([])
       setConverting(true)
 
       try {
@@ -53,21 +51,19 @@ export default function PhotoUpload({
           setConverting(false)
           return
         }
-
-        const skippedFiles: string[] = []
         
-        // Convert HEIC files to JPEG
+        // Convert HEIC files to JPEG (server-side)
         const processedFiles = await Promise.all(
           validFiles.map(async (file) => {
             if (isHeicFile(file)) {
               try {
-                console.log('Detected HEIC file, converting:', file.name)
+                console.log('Detected HEIC file, converting via server:', file.name)
                 const converted = await convertHeicToJpeg(file)
                 console.log('Conversion successful for:', file.name)
                 return converted
               } catch (err: any) {
                 console.error('HEIC conversion failed for file:', file.name, err)
-                skippedFiles.push(file.name)
+                setError(`Failed to convert ${file.name}. Please try again or use a different image.`)
                 return null
               }
             }
@@ -77,14 +73,6 @@ export default function PhotoUpload({
 
         // Filter out any failed conversions
         const successfulFiles = processedFiles.filter((file): file is File => file !== null)
-
-        if (skippedFiles.length > 0) {
-          setSkippedHeicFiles(skippedFiles)
-          setError(
-            `Could not convert ${skippedFiles.length} HEIC file(s). ` +
-            `On iPhone: Open photo → Share → Save to Files → choose JPEG format, then upload.`
-          )
-        }
 
         if (successfulFiles.length === 0) {
           setConverting(false)
