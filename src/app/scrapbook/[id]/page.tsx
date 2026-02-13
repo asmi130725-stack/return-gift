@@ -503,7 +503,7 @@ export default function ScrapbookPage() {
                   theme={(event.mood as any) || 'romantic'}
                   caption={event.aiCaption || ''}
                   eventTitle={event.title}
-                  eventDate={event.date}
+                  eventDate={new Date(event.date).toISOString()}
                   eventNotes={event.notes}
                   eventMood={event.mood}
                 />
