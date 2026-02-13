@@ -20,10 +20,12 @@ export default function PhotoUpload({
   const [previews, setPreviews] = useState<string[]>([])
   const [error, setError] = useState<string>('')
   const [converting, setConverting] = useState(false)
+  const [skippedHeicFiles, setSkippedHeicFiles] = useState<string[]>([])
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       setError('')
+      setSkippedHeicFiles([])
       setConverting(true)
 
       try {
@@ -52,6 +54,8 @@ export default function PhotoUpload({
           return
         }
 
+        const skippedFiles: string[] = []
+        
         // Convert HEIC files to JPEG
         const processedFiles = await Promise.all(
           validFiles.map(async (file) => {
@@ -61,9 +65,9 @@ export default function PhotoUpload({
                 const converted = await convertHeicToJpeg(file)
                 console.log('Conversion successful for:', file.name)
                 return converted
-              } catch (err) {
+              } catch (err: any) {
                 console.error('HEIC conversion failed for file:', file.name, err)
-                setError(`Failed to convert ${file.name}. The HEIC format may not be supported. Please try uploading as JPEG or PNG.`)
+                skippedFiles.push(file.name)
                 return null
               }
             }
@@ -73,6 +77,14 @@ export default function PhotoUpload({
 
         // Filter out any failed conversions
         const successfulFiles = processedFiles.filter((file): file is File => file !== null)
+
+        if (skippedFiles.length > 0) {
+          setSkippedHeicFiles(skippedFiles)
+          setError(
+            `Could not convert ${skippedFiles.length} HEIC file(s). ` +
+            `On iPhone: Open photo → Share → Save to Files → choose JPEG format, then upload.`
+          )
+        }
 
         if (successfulFiles.length === 0) {
           setConverting(false)

@@ -83,13 +83,13 @@ export async function convertHeicToJpeg(file: File): Promise<File> {
       console.log('heic2any library loaded successfully')
     } catch (importError) {
       console.error('Failed to import heic2any library:', importError)
-      throw new Error('HEIC converter library failed to load. Please try uploading as JPEG or PNG.')
+      throw new Error('HEIC converter library failed to load.')
     }
 
     const convertedBlob = await heic2any({
       blob: file,
       toType: 'image/jpeg',
-      quality: 0.9,
+      quality: 0.8,
     })
 
     // heic2any can return Blob or Blob[], handle both cases
@@ -101,13 +101,20 @@ export async function convertHeicToJpeg(file: File): Promise<File> {
     
     console.log('HEIC conversion successful:', convertedFile.name, 'New size:', convertedFile.size)
     return convertedFile
-  } catch (error) {
+  } catch (error: any) {
     console.error('HEIC conversion error details:', {
       fileName: file.name,
       fileType: file.type,
       fileSize: file.size,
-      error: error
+      error: error,
+      errorCode: error?.code,
+      errorMessage: error?.message
     })
+    
+    // Re-throw with more helpful message
+    if (error?.message?.includes('format not supported') || error?.code === 2) {
+      throw new Error('This HEIC format is not supported by the browser converter.')
+    }
     throw error
   }
 }
