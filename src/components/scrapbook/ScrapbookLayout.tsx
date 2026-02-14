@@ -3,6 +3,7 @@
 import { Photo } from '@/types'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import PhotoCarousel from './PhotoCarousel'
 
 export const SCRAPBOOK_TEMPLATES = [
   {
@@ -130,9 +131,9 @@ export default function ScrapbookLayout({
   )
 }
 
-// Template 1: Pink Heart Frame - 2-3 photos in center
+// Template 1: Pink Heart Frame - 1 photo when > 2, otherwise up to 3
 function Template1Layout({ photos }: { photos: Photo[] }) {
-  const displayPhotos = photos.slice(0, 3)
+  const displayPhotos = photos.length > 2 ? [photos[0]] : photos.slice(0, 3)
   
   return (
     <div className="relative w-full aspect-square max-w-2xl mx-auto">
@@ -143,38 +144,43 @@ function Template1Layout({ photos }: { photos: Photo[] }) {
         className="object-contain"
       />
       
-      {/* Default grid layout */}
-      <div className="absolute inset-0 flex items-center justify-center p-[15%]">
-        <div className={`grid gap-2 w-full h-full ${
-          displayPhotos.length === 1 ? 'grid-cols-1' : 
-          displayPhotos.length === 2 ? 'grid-cols-2' : 
-          'grid-cols-2'
-        }`}>
-          {displayPhotos.map((photo, index) => (
-            <motion.div
-              key={photo.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="relative w-full h-full rounded-lg overflow-hidden shadow-lg"
-            >
-              <Image
-                src={photo.url}
-                alt={`Photo ${index + 1}`}
-                fill
-                className="object-cover"
-              />
-            </motion.div>
-          ))}
+      {photos.length > 2 ? (
+        <div className="absolute inset-0 flex items-center justify-center p-[15%]">
+          <PhotoCarousel photos={photos} />
         </div>
-      </div>
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center p-[15%]">
+          <div className={`grid gap-2 w-full h-full ${
+            displayPhotos.length === 1 ? 'grid-cols-1' : 
+            displayPhotos.length === 2 ? 'grid-cols-2' : 
+            'grid-cols-2'
+          }`}>
+            {displayPhotos.map((photo, index) => (
+              <motion.div
+                key={photo.id}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="relative w-full h-full rounded-lg overflow-hidden shadow-lg"
+              >
+                <Image
+                  src={photo.url}
+                  alt={`Photo ${index + 1}`}
+                  fill
+                  className="object-cover"
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-// Template 2: Dried Flowers - Photos in upper white/cream rectangle, flowers at bottom
+// Template 2: Dried Flowers - 1 photo when > 2, otherwise up to 4
 function Template2Layout({ photos }: { photos: Photo[] }) {
-  const displayPhotos = photos.slice(0, 4)
+  const displayPhotos = photos.length > 2 ? [photos[0]] : photos.slice(0, 4)
   
   return (
     <div className="relative w-full aspect-[3/4] max-w-2xl mx-auto">
@@ -185,46 +191,50 @@ function Template2Layout({ photos }: { photos: Photo[] }) {
         className="object-contain"
       />
       
-      {/* Default grid layout */}
-      <div className="absolute top-[5%] left-[8%] right-[8%] bottom-[15%]">
-        <div className={`grid gap-4 w-full h-full ${
-          displayPhotos.length === 1 ? 'grid-cols-1' : 
-          displayPhotos.length === 2 ? 'grid-cols-2' : 
-          displayPhotos.length === 3 ? 'grid-cols-3' : 
-          'grid-cols-2 grid-rows-2'
-        }`}>
-          {displayPhotos.map((photo, index) => (
-            <motion.div
-              key={photo.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="relative w-full h-full rounded-lg overflow-hidden shadow-xl"
-            >
-              <Image
-                src={photo.url}
-                alt={`Photo ${index + 1}`}
-                fill
-                className="object-cover"
-              />
-            </motion.div>
-          ))}
+      {photos.length > 2 ? (
+        <div className="absolute top-[5%] left-[8%] right-[8%] bottom-[15%]">
+          <PhotoCarousel photos={photos} />
         </div>
-      </div>
+      ) : (
+        <div className="absolute top-[5%] left-[8%] right-[8%] bottom-[15%]">
+          <div className={`grid gap-4 w-full h-full ${
+            displayPhotos.length === 1 ? 'grid-cols-1' : 
+            displayPhotos.length === 2 ? 'grid-cols-2' : 
+            displayPhotos.length === 3 ? 'grid-cols-3' : 
+            'grid-cols-2 grid-rows-2'
+          }`}>
+            {displayPhotos.map((photo, index) => (
+              <motion.div
+                key={photo.id}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="relative w-full h-full rounded-lg overflow-hidden shadow-xl"
+              >
+                <Image
+                  src={photo.url}
+                  alt={`Photo ${index + 1}`}
+                  fill
+                  className="object-cover"
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-// Template 3: Journal Page - 3 decorative photo frames on cream page
+// Template 3: Journal Page - 1 photo when > 2, otherwise up to 3
 function Template3Layout({ photos }: { photos: Photo[] }) {
-  const displayPhotos = photos.slice(0, 3)
-  
-  // Better positioning: more spread out and visually balanced
   const zones = [
-    { top: '8%', left: '10%', width: '35%', height: '32%', rotate: -3 }, // Top-left larger
-    { top: '35%', left: '50%', width: '38%', height: '35%', rotate: 2 }, // Middle-right largest
-    { top: '68%', left: '12%', width: '32%', height: '28%', rotate: -2 }, // Bottom-left
+    { top: '8%', left: '10%', width: '35%', height: '32%', rotate: -3 },
+    { top: '35%', left: '50%', width: '38%', height: '35%', rotate: 2 },
+    { top: '68%', left: '12%', width: '32%', height: '28%', rotate: -2 },
   ]
+  
+  const displayPhotos = photos.length > 2 ? [photos[0]] : photos.slice(0, 3)
   
   return (
     <div className="relative w-full aspect-square max-w-2xl mx-auto">
@@ -235,42 +245,47 @@ function Template3Layout({ photos }: { photos: Photo[] }) {
         className="object-contain"
       />
       
-      {/* Default zone layout */}
       <div className="absolute inset-0">
-        {displayPhotos.map((photo, index) => {
-          const zone = zones[index]
-          return (
-            <motion.div
-              key={photo.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="absolute overflow-hidden shadow-md rounded"
-              style={{
-                top: zone.top,
-                left: zone.left,
-                width: zone.width,
-                height: zone.height,
-                transform: `rotate(${zone.rotate}deg)`,
-              }}
-            >
-              <Image
-                src={photo.url}
-                alt={`Photo ${index + 1}`}
-                fill
-                className="object-cover"
-              />
-            </motion.div>
-          )
-        })}
+        {photos.length > 2 ? (
+          <div className="absolute inset-0 flex items-center justify-center p-[10%]">
+            <PhotoCarousel photos={photos} />
+          </div>
+        ) : (
+          displayPhotos.map((photo, index) => {
+            const zone = zones[index]
+            return (
+              <motion.div
+                key={photo.id}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="absolute overflow-hidden shadow-md rounded"
+                style={{
+                  top: zone.top,
+                  left: zone.left,
+                  width: zone.width,
+                  height: zone.height,
+                  transform: `rotate(${zone.rotate}deg)`,
+                }}
+              >
+                <Image
+                  src={photo.url}
+                  alt={`Photo ${index + 1}`}
+                  fill
+                  className="object-cover"
+                />
+              </motion.div>
+            )
+          })
+        )}
       </div>
     </div>
   )
 }
 
-// Template 6: Floral Romance - 2-3 photos in center pink area
+// Template 6: Floral Romance - 1 photo when > 2, otherwise up to 3
 function Template6Layout({ photos }: { photos: Photo[] }) {
-  const displayPhotos = photos.slice(0, 3)
+  const displayPhotos = photos.length > 2 ? [photos[0]] : photos.slice(0, 3)
   
   return (
     <div className="relative w-full aspect-[3/4] max-w-xl mx-auto">
@@ -281,29 +296,34 @@ function Template6Layout({ photos }: { photos: Photo[] }) {
         className="object-contain"
       />
       
-      {/* Default grid layout */}
-      <div className="absolute inset-0 flex items-center justify-center px-[20%] py-[15%] pb-[25%]">
-        <div className={`grid gap-2 w-full h-full ${
-          displayPhotos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
-        }`}>
-          {displayPhotos.map((photo, index) => (
-            <motion.div
-              key={photo.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="relative w-full h-full rounded-lg overflow-hidden shadow-lg"
-            >
-              <Image
-                src={photo.url}
-                alt={`Photo ${index + 1}`}
-                fill
-                className="object-cover"
-              />
-            </motion.div>
-          ))}
+      {photos.length > 2 ? (
+        <div className="absolute inset-0 flex items-center justify-center px-[20%] py-[15%] pb-[25%]">
+          <PhotoCarousel photos={photos} />
         </div>
-      </div>
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center px-[20%] py-[15%] pb-[25%]">
+          <div className={`grid gap-2 w-full h-full ${
+            displayPhotos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
+          }`}>
+            {displayPhotos.map((photo, index) => (
+              <motion.div
+                key={photo.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="relative w-full h-full rounded-lg overflow-hidden shadow-lg"
+              >
+                <Image
+                  src={photo.url}
+                  alt={`Photo ${index + 1}`}
+                  fill
+                  className="object-cover"
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

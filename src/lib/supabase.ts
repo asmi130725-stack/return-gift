@@ -118,6 +118,7 @@ export async function createPhoto(photo: {
   url: string
   publicId: string
   order: number
+  mediaType?: 'image' | 'video'
 }) {
   const { data, error } = await supabase
     .from('photos')
@@ -126,12 +127,16 @@ export async function createPhoto(photo: {
       url: photo.url,
       public_id: photo.publicId,
       order: photo.order,
+      media_type: photo.mediaType || 'image',
     })
     .select()
     .single()
 
   if (error) throw error
-  return data
+  return {
+    ...data,
+    mediaType: data.media_type,
+  }
 }
 
 export async function getPhotos(eventId: string) {
@@ -150,6 +155,7 @@ export async function getPhotos(eventId: string) {
     url: photo.url,
     publicId: photo.public_id,
     order: photo.order,
+    mediaType: photo.media_type || 'image',
     positionX: photo.position_x,
     positionY: photo.position_y,
     width: photo.width,

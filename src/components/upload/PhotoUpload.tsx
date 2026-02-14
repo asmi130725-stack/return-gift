@@ -10,15 +10,23 @@ interface PhotoUploadProps {
   onPhotosSelected: (files: File[]) => void
   maxFiles?: number
   maxSize?: number // in bytes
+  allowVideos?: boolean
 }
+
+const VALID_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime']
 
 export default function PhotoUpload({
   onPhotosSelected,
   maxFiles = 20,
   maxSize = 10 * 1024 * 1024, // 10MB
+  allowVideos = true,
 }: PhotoUploadProps) {
-  const [previews, setPreviews] = useState<string[]>([])
+  const [previews, setPreviews] = useState<{ url: string; type: 'image' | 'video' }[]>([])
   const [error, setError] = useState<string>('')
+
+  const isValidVideoType = (file: File) => {
+    return VALID_VIDEO_TYPES.includes(file.type) || file.name.toLowerCase().endsWith('.mp4') || file.name.toLowerCase().endsWith('.webm') || file.name.toLowerCase().endsWith('.mov')
+  }
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -42,8 +50,11 @@ export default function PhotoUpload({
 
       // Validate file types
       const validFiles = acceptedFiles.filter((file) => {
-        if (!isValidImageType(file)) {
-          setError('Some files were skipped. Please upload only images (JPEG, PNG, WebP).')
+        const isImage = isValidImageType(file)
+        const isVideo = allowVideos && isValidVideoType(file)
+        
+        if (!isImage && !isVideo) {
+          setError('Some files were skipped. Please upload images (JPEG, PNG, WebP) or videos (MP4, WebM, MOV).')
           return false
         }
         if (file.size > maxSize) {
@@ -57,22 +68,28 @@ export default function PhotoUpload({
 
       // Check total count
       if (previews.length + validFiles.length > maxFiles) {
-        setError(`Maximum ${maxFiles} photos allowed.`)
+        setError(`Maximum ${maxFiles} files allowed.`)
         return
       }
 
       // Create preview URLs
-      const newPreviews = validFiles.map((file) => URL.createObjectURL(file))
-        setPreviews((prev) => [...prev, ...newPreviews])
+      const newPreviews = validFiles.map((file) => ({
+        url: URL.createObjectURL(file),
+        type: isValidImageType(file) ? 'image' as const : 'video' as const,
+      }))
+      setPreviews((prev) => [...prev, ...newPreviews])
         
         onPhotosSelected(validFiles)
     },
-    [maxFiles, maxSize, onPhotosSelected, previews.length]
+    [maxFiles, maxSize, onPhotosSelected, previews.length, allowVideos]
   )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
+    accept: allowVideos ? {
+      'image/*': ['.jpeg', '.jpg', '.png', '.webp'],
+      'video/*': ['.mp4', '.webm', '.mov', '.quicktime'],
+    } : {
       'image/*': ['.jpeg', '.jpg', '.png', '.webp'],
     },
     maxFiles,
@@ -123,13 +140,16 @@ export default function PhotoUpload({
 
           {/* Text */}
           <p className="text-base sm:text-lg font-medium text-gray-700 mb-2">
-            {isDragActive ? 'Drop your photos here' : 'Tap to upload photos'}
+            {isDragActive ? 'Drop your files here' : 'Tap to upload photos & videos'}
           </p>
           <p className="text-sm text-gray-500 mb-1">
             or drag and drop
           </p>
           <p className="text-xs text-gray-400">
-            JPEG, PNG, WebP up to {formatFileSize(maxSize)} • Max {maxFiles} photos
+            {allowVideos 
+              ? `JPEG, PNG, WebP, MP4, WebM up to ${formatFileSize(maxSize)} • Max ${maxFiles} files`
+              : `JPEG, PNG, WebP up to ${formatFileSize(maxSize)} • Max ${maxFiles} photos`
+            }
           </p>
 
           {/* Mobile Camera Tip */}
@@ -157,23 +177,37 @@ export default function PhotoUpload({
       {previews.length > 0 && (
         <div className="mt-6">
           <h4 className="text-sm font-medium text-gray-700 mb-3">
-            Selected Photos ({previews.length})
+            Selected Media ({previews.length})
           </h4>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3">
             {previews.map((preview, index) => (
               <motion.div
-                key={preview}
+                key={preview.url}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 className="relative aspect-square group"
               >
-                <Image
-                  src={preview}
-                  alt={`Preview ${index + 1}`}
-                  fill
-                  className="object-cover rounded-lg"
-                />
+                {preview.type === 'image' ? (
+                  <Image
+                    src={preview.url}
+                    alt={`Preview ${index + 1}`}
+                    fill
+                    className="object-cover rounded-lg"
+                  />
+                ) : (
+                  <video
+                    src={preview.url}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                )}
+                
+                {/* Video Badge */}
+                {preview.type === 'video' && (
+                  <div className="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-0.5 rounded">
+                    🎥 Video
+                  </div>
+                )}
                 
                 {/* Remove Button */}
                 <button
@@ -185,7 +219,7 @@ export default function PhotoUpload({
                     opacity-0 group-hover:opacity-100 transition-opacity
                     shadow-lg
                   "
-                  aria-label="Remove photo"
+                  aria-label="Remove file"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

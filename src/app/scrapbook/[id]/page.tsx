@@ -6,6 +6,7 @@ import SwipeableGallery from '@/components/gallery/SwipeableGallery'
 import ScrapbookLayout from '@/components/scrapbook/ScrapbookLayout'
 import TemplateSelector from '@/components/scrapbook/TemplateSelector'
 import AIGenerateButton from '@/components/ui/AIGenerateButton'
+import BackgroundMusic from '@/components/scrapbook/BackgroundMusic'
 import { Photo, LayoutStyle, Event, MoodType } from '@/types'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -507,6 +508,9 @@ export default function ScrapbookPage() {
                   eventNotes={event.notes}
                   eventMood={event.mood}
                 />
+
+                {/* Background Music */}
+                <BackgroundMusic mood={event.mood} autoPlay={false} />
 
                 {/* Actions */}
                 <div className="mt-2 flex flex-col sm:flex-row gap-1.5">
