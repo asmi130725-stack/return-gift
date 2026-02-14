@@ -6,7 +6,6 @@ const f = createUploadthing()
 export const ourFileRouter = {
   imageUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 10 } })
     .middleware(async ({ req }) => {
-      // Return metadata to be available in onUploadComplete
       return { userId: "00000000-0000-0000-0000-000000000001", type: "image" }
     })
     .onUploadComplete(async ({ metadata, file }) => {
@@ -20,7 +19,6 @@ export const ourFileRouter = {
     video: { maxFileSize: "16MB", maxFileCount: 5 }
   })
     .middleware(async ({ req }) => {
-      // Return metadata to be available in onUploadComplete
       return { userId: "00000000-0000-0000-0000-000000000001" }
     })
     .onUploadComplete(async ({ metadata, file }) => {
@@ -28,3 +26,7 @@ export const ourFileRouter = {
       console.log("File URL:", file.url)
       const type = file.type?.startsWith('image/') ? 'image' : file.type?.startsWith('video/') ? 'video' : 'image'
       return { uploadedBy: metadata.userId, type }
+    }),
+} satisfies FileRouter
+
+export type OurFileRouter = typeof ourFileRouter
