@@ -122,37 +122,37 @@ export const BACKGROUND_MUSIC = [
     id: 'soft-piano-1',
     title: 'Gentle Piano',
     mood: 'romantic',
-    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_d73daca3ea.mp3',
   },
   {
     id: 'acoustic-love',
     title: 'Acoustic Love',
     mood: 'romantic',
-    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    url: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_01cd1b39ba.mp3',
   },
   {
     id: 'dreamy-strings',
     title: 'Dreamy Strings',
     mood: 'nostalgic',
-    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+    url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808faa5d4.mp3',
   },
   {
     id: 'joyful-ukulele',
     title: 'Joyful Ukulele',
     mood: 'joyful',
-    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+    url: 'https://cdn.pixabay.com/download/audio/2022/04/28/audio_7b3be1eda3.mp3',
   },
   {
     id: 'playful-bells',
     title: 'Playful Bells',
     mood: 'playful',
-    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    url: 'https://cdn.pixabay.com/download/audio/2022/04/21/audio_3997f2d24f.mp3',
   },
   {
     id: 'calm-meditation',
     title: 'Calm Meditation',
     mood: 'peaceful',
-    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
+    url: 'https://cdn.pixabay.com/download/audio/2022/06/17/audio_06e2017e53.mp3',
   },
 ]
 
