@@ -509,8 +509,8 @@ export default function ScrapbookPage() {
                   eventMood={event.mood}
                 />
 
-                {/* Background Music */}
-                <BackgroundMusic mood={event.mood} autoPlay={false} />
+                {/* Background Music - Temporarily disabled until audio sources are configured */}
+                {/* <BackgroundMusic mood={event.mood} autoPlay={false} /> */}
 
                 {/* Actions */}
                 <div className="mt-2 flex flex-col sm:flex-row gap-1.5">

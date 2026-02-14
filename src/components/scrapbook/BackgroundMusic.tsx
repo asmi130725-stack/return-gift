@@ -15,6 +15,8 @@ export default function BackgroundMusic({ mood, autoPlay = false }: BackgroundMu
   const [currentSong, setCurrentSong] = useState(() => getRandomBackgroundMusic(mood))
   const [volume, setVolume] = useState(0.3)
   const [showControls, setShowControls] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (autoPlay) {
@@ -26,13 +28,34 @@ export default function BackgroundMusic({ mood, autoPlay = false }: BackgroundMu
     const audio = audioRef.current
     if (!audio) return
 
-    if (isPlaying) {
+    const handleLoadedMetadata = () => {
+      setError(null)
+      setIsLoading(false)
+    }
+
+    const handleError = () => {
+      setError('Unable to load audio')
+      setIsLoading(false)
+      setIsPlaying(false)
+    }
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    audio.addEventListener('error', handleError)
+
+    if (isPlaying && audio.src) {
+      setIsLoading(true)
       audio.play().catch((err) => {
         console.error('Failed to play audio:', err)
+        setError('Failed to play audio')
         setIsPlaying(false)
       })
     } else {
       audio.pause()
+    }
+
+    return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      audio.removeEventListener('error', handleError)
     }
   }, [isPlaying])
 
@@ -49,12 +72,16 @@ export default function BackgroundMusic({ mood, autoPlay = false }: BackgroundMu
   const handleNextSong = () => {
     const newSong = getRandomBackgroundMusic(mood)
     setCurrentSong(newSong)
+    setError(null)
     if (audioRef.current) {
       audioRef.current.src = newSong.url
       if (isPlaying) {
-        audioRef.current.play().catch((err) => {
-          console.error('Failed to play audio:', err)
-        })
+        setTimeout(() => {
+          audioRef.current?.play().catch((err) => {
+            console.error('Failed to play audio:', err)
+            setError('Failed to play audio')
+          })
+        }, 100)
       }
     }
   }
@@ -66,6 +93,7 @@ export default function BackgroundMusic({ mood, autoPlay = false }: BackgroundMu
         src={currentSong.url}
         loop
         crossOrigin="anonymous"
+        preload="auto"
       />
 
       <AnimatePresence>
@@ -87,37 +115,55 @@ export default function BackgroundMusic({ mood, autoPlay = false }: BackgroundMu
               </p>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+                {error}
+              </div>
+            )}
+
+            {/* Loading State */}
+            {isLoading && (
+              <div className="mb-4 text-xs text-gray-500">Loading audio...</div>
+            )}
+
             {/* Volume Control */}
-            <div className="mb-4">
-              <label className="text-xs text-gray-600 uppercase tracking-wide block mb-2">
-                Volume
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={volume}
-                onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-600"
-              />
-            </div>
+            {!error && (
+              <div className="mb-4">
+                <label className="text-xs text-gray-600 uppercase tracking-wide block mb-2">
+                  Volume
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={volume}
+                  onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-600"
+                />
+              </div>
+            )}
 
             {/* Controls */}
-            <div className="flex gap-2">
-              <button
-                onClick={handlePlayPause}
-                className="flex-1 px-3 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors font-medium text-sm"
-              >
-                {isPlaying ? '⏸ Pause' : '▶ Play'}
-              </button>
-              <button
-                onClick={handleNextSong}
-                className="flex-1 px-3 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm"
-              >
-                🔀 Next
-              </button>
-            </div>
+            {!error && (
+              <div className="flex gap-2">
+                <button
+                  onClick={handlePlayPause}
+                  disabled={isLoading}
+                  className="flex-1 px-3 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors font-medium text-sm disabled:opacity-50"
+                >
+                  {isPlaying ? '⏸ Pause' : '▶ Play'}
+                </button>
+                <button
+                  onClick={handleNextSong}
+                  disabled={isLoading}
+                  className="flex-1 px-3 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm disabled:opacity-50"
+                >
+                  🔀 Next
+                </button>
+              </div>
+            )}
 
             {/* Close Button */}
             <button
@@ -140,10 +186,13 @@ export default function BackgroundMusic({ mood, autoPlay = false }: BackgroundMu
         className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-xl transition-all ${
           isPlaying
             ? 'bg-pink-600 text-white'
+            : error
+            ? 'bg-red-200 text-red-600'
             : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
         }`}
+        title={error ? 'Audio not available' : isPlaying ? 'Music playing' : 'Click to play music'}
       >
-        {isPlaying ? '♪' : '♫'}
+        {error ? '✕' : isPlaying ? '♪' : '♫'}
       </motion.button>
     </div>
   )
