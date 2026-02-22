@@ -99,7 +99,7 @@ export default function NotificationsPage() {
                 if (e.target === e.currentTarget) setExpandedId(null)
               }}
             >
-              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh]">
                 {/* Header */}
                 {notifications.find((n) => n.id === expandedId) && (
                   <>
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
                     </div>
 
                     {/* Content */}
-                    <div className="px-6 py-8 text-gray-700">
+                    <div className="px-6 py-8 text-gray-700 overflow-y-auto flex-1">
                       {notifications.find((n) => n.id === expandedId)?.fullContent}
                     </div>
 
