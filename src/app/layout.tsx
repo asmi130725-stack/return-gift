@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Lora, Caveat, Dancing_Script } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
+import { ApologyCard } from '@/components/ApologyCard'
 import './globals.css'
 
 const inter = Inter({
@@ -71,6 +72,7 @@ export default function RootLayout({
             },
           }}
         />
+        <ApologyCard />
         {/* Safe area for notched devices */}
         <div className="min-h-screen pt-safe-top pb-safe-bottom">
           {children}
