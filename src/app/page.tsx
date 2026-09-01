@@ -49,13 +49,22 @@ export default function HomePage() {
               Bookmarks
             </h1>
           </div>
-          <Link
-            href="/create"
-            className="inline-flex items-center justify-center gap-1 text-xs font-semibold text-pink-600 bg-pink-50 hover:bg-pink-100 px-3.5 py-1.5 rounded-full border border-pink-200/70 shadow-sm transition-all active:scale-95 text-center leading-none"
-          >
-            <span className="text-sm font-bold leading-none -mt-0.5">+</span>
-            <span className="leading-none">New Memory</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/notifications"
+              className="inline-flex items-center justify-center p-2 text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-full border border-pink-200/70 shadow-xs transition-all active:scale-95"
+              title="Secret Messages & Letters"
+            >
+              <span className="text-base">💌</span>
+            </Link>
+            <Link
+              href="/create"
+              className="inline-flex items-center justify-center gap-1 text-xs font-semibold text-pink-600 bg-pink-50 hover:bg-pink-100 px-3.5 py-1.5 rounded-full border border-pink-200/70 shadow-xs transition-all active:scale-95 text-center leading-none"
+            >
+              <span className="text-sm font-bold leading-none -mt-0.5">+</span>
+              <span className="leading-none">New Memory</span>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -82,34 +91,37 @@ export default function HomePage() {
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-pink-100/80 z-50">
-        <div className="grid grid-cols-3 h-16 max-w-lg mx-auto">
+        <div className="grid grid-cols-4 h-16 max-w-lg mx-auto">
           {/* Calendar - Active */}
           <button className="flex flex-col items-center justify-center gap-1 text-pink-600">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span className="text-[11px] font-semibold">Calendar</span>
+            <span className="text-[10px] font-semibold">Calendar</span>
           </button>
-
-          {/* Create - Centered Floating Pill Button */}
-          <div className="flex items-center justify-center">
-            <Link
-              href="/create"
-              aria-label="Create new memory"
-              className="w-13 h-13 -mt-6 bg-gradient-to-br from-pink-500 to-rose-500 rounded-full shadow-lg shadow-pink-500/30 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-transform"
-            >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-              </svg>
-            </Link>
-          </div>
 
           {/* Memories */}
           <Link href="/memories" className="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-pink-600 transition-colors">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
-            <span className="text-[11px] font-medium">Memories</span>
+            <span className="text-[10px] font-medium">Memories</span>
+          </Link>
+
+          {/* Messages */}
+          <Link href="/notifications" className="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-pink-600 transition-colors">
+            <span className="text-lg leading-none">💌</span>
+            <span className="text-[10px] font-medium">Messages</span>
+          </Link>
+
+          {/* Create */}
+          <Link href="/create" className="flex flex-col items-center justify-center gap-1 text-pink-600 hover:text-pink-700 transition-colors">
+            <div className="w-7 h-7 bg-gradient-to-br from-pink-500 to-rose-500 rounded-full flex items-center justify-center text-white shadow-xs">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <span className="text-[10px] font-medium">Create</span>
           </Link>
         </div>
       </nav>

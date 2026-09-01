@@ -41,23 +41,46 @@ export default function NotificationsPage() {
   const [newContent, setNewContent] = useState('')
   const [newColor, setNewColor] = useState(COLOR_OPTIONS[0].value)
 
-  // Load from localStorage
+  // Load messages from Supabase API & localStorage fallback
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('user_apology_messages')
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMessages(parsed)
-          return
+    async function loadMessages() {
+      try {
+        const res = await fetch('/api/messages')
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data.messages) && data.messages.length > 0) {
+            // Merge default apology with database messages
+            const merged = [...data.messages]
+            if (!merged.some(m => m.id === 'apology-default')) {
+              merged.push(DEFAULT_MESSAGES[0])
+            }
+            setMessages(merged)
+            localStorage.setItem('user_apology_messages', JSON.stringify(merged))
+            return
+          }
         }
+      } catch (e) {
+        console.warn('Could not fetch remote messages, falling back to local:', e)
       }
-    } catch (e) {
-      console.error('Error loading messages:', e)
+
+      // Local storage fallback
+      try {
+        const saved = localStorage.getItem('user_apology_messages')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed)
+          }
+        }
+      } catch (e) {
+        console.error('Error loading messages from cache:', e)
+      }
     }
+
+    loadMessages()
   }, [])
 
-  // Save to localStorage
+  // Save to localStorage & state
   const saveMessages = (updated: MessageItem[]) => {
     setMessages(updated)
     try {
@@ -67,32 +90,63 @@ export default function NotificationsPage() {
     }
   }
 
-  const handleCreateMessage = (e: React.FormEvent) => {
+  const handleCreateMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newTitle.trim() || !newContent.trim()) return
 
+    const tempId = `msg-${Date.now()}`
     const newMessage: MessageItem = {
-      id: `msg-${Date.now()}`,
+      id: tempId,
       title: newTitle.trim(),
       content: newContent.trim(),
       color: newColor,
       createdAt: new Date().toISOString(),
     }
 
+    // Optimistic UI update
     const updated = [newMessage, ...messages]
     saveMessages(updated)
     setNewTitle('')
     setNewContent('')
     setIsAdding(false)
     setExpandedId(newMessage.id)
+
+    // Save to Supabase API
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newMessage.title,
+          content: newMessage.content,
+          color: newMessage.color,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.message && data.message.id) {
+          setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: data.message.id } : m))
+        }
+      }
+    } catch (err) {
+      console.warn('Saved locally, remote sync pending:', err)
+    }
   }
 
-  const handleDeleteMessage = (id: string, e: React.MouseEvent) => {
+  const handleDeleteMessage = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
     const updated = messages.filter((m) => m.id !== id)
     saveMessages(updated)
     if (expandedId === id) {
       setExpandedId(null)
+    }
+
+    if (id !== 'apology-default' && !id.startsWith('msg-')) {
+      try {
+        await fetch(`/api/messages?id=${id}`, { method: 'DELETE' })
+      } catch (err) {
+        console.warn('Could not delete from server:', err)
+      }
     }
   }
 
