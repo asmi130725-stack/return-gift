@@ -542,6 +542,11 @@ export default function ScrapbookPage() {
                   spotifyUrl={event.spotifyUrl}
                 />
 
+                {/* Linked Spotify Soundtrack Player */}
+                {event.spotifyUrl && (
+                  <SoundtrackPlayer data={event.spotifyUrl} />
+                )}
+
                 {/* Actions */}
                 <div className="mt-2 flex flex-col sm:flex-row gap-1.5">
                   <button
