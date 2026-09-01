@@ -11,6 +11,7 @@ import { Photo, LayoutStyle, Event, MoodType } from '@/types'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { compressImage } from '@/lib/compression'
 
 export default function ScrapbookPage() {
   const params = useParams()
@@ -247,13 +248,14 @@ export default function ScrapbookPage() {
         const uploadedPhotos = []
         
         for (let i = 0; i < selectedFiles.length; i++) {
-          const file = selectedFiles[i]
-          const fileExt = file.name.split('.').pop()
+          const originalFile = selectedFiles[i]
+          const fileToUpload = await compressImage(originalFile)
+          const fileExt = fileToUpload.name.split('.').pop() || 'webp'
           const fileName = `${event.id}/${Date.now()}-${i}.${fileExt}`
           
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('photos')
-            .upload(fileName, file)
+            .upload(fileName, fileToUpload)
 
           if (uploadError) {
             console.error('Upload error:', uploadError)

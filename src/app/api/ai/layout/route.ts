@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { suggestLayoutStyle } from '@/lib/openai'
+import { suggestLayoutStyle } from '@/lib/gemini'
 import { Event } from '@/types'
 
 export async function POST(request: NextRequest) {

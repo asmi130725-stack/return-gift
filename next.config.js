@@ -6,8 +6,14 @@ const nextConfig = {
       'utfs.io',
       'cloudinary.com',
       'res.cloudinary.com',
-      'picsum.photos', // For demo images
-      'extdvqbwnpsbvsxpeavj.supabase.co', // Supabase storage
+      'picsum.photos',
+      'extdvqbwnpsbvsxpeavj.supabase.co',
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
   },

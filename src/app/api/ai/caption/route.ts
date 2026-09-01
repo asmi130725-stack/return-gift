@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateEventCaption } from '@/lib/openai'
+import { generateEventCaption } from '@/lib/gemini'
 import { Event, Photo } from '@/types'
 
 export async function POST(request: NextRequest) {
