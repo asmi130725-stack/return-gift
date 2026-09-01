@@ -360,8 +360,8 @@ function Template5Layout(props: TemplateProps) {
         className="object-contain pointer-events-none"
         priority
       />
-      {/* Positioned comfortably down in the middle white cutout and expanded horizontally */}
-      <div className="absolute top-[37%] bottom-[25%] -left-[4%] -right-[4%] flex items-center justify-center">
+      {/* Expanded from top:36% to bottom:22% covering entire white gap between flowers */}
+      <div className="absolute top-[36%] bottom-[22%] left-0 right-0">
         <PhotoCarousel {...props} />
       </div>
     </div>
@@ -382,7 +382,7 @@ function Template6Layout(props: TemplateProps) {
         className="object-contain pointer-events-none"
         priority
       />
-      <div className="absolute inset-0 flex items-center justify-center px-[16%] py-[14%] pb-[20%]">
+      <div className="absolute inset-0 px-[16%] py-[14%] pb-[20%]">
         <PhotoCarousel {...props} />
       </div>
     </div>
@@ -404,7 +404,7 @@ function Template7Layout(props: TemplateProps) {
         priority
       />
       {/* Positioned higher to cover the polaroid frame box completely */}
-      <div className="absolute top-[26%] bottom-[37.5%] left-[17.5%] right-[17.5%] flex items-center justify-center">
+      <div className="absolute top-[26%] bottom-[37.5%] left-[17.5%] right-[17.5%]">
         <PhotoCarousel {...props} />
       </div>
     </div>
@@ -425,8 +425,8 @@ function Template8Layout(props: TemplateProps) {
         className="object-contain pointer-events-none"
         priority
       />
-      {/* Positioned comfortably down in the middle white cutout and expanded horizontally */}
-      <div className="absolute top-[37%] bottom-[25%] -left-[4%] -right-[4%] flex items-center justify-center">
+      {/* Expanded from top:36% to bottom:22% covering entire white gap between flowers */}
+      <div className="absolute top-[36%] bottom-[22%] left-0 right-0">
         <PhotoCarousel {...props} />
       </div>
     </div>
