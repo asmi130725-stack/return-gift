@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, date, notes, mood } = body
+    const { title, date, notes, mood, spotifyUrl } = body
 
     if (!title || !date) {
       return NextResponse.json(
@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       date: new Date(date),
       notes,
       mood,
+      spotifyUrl,
     })
 
     return NextResponse.json({ event }, { status: 201 })

@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { SCRAPBOOK_TEMPLATES } from './ScrapbookLayout'
 
 interface TemplateSelectorProps {
@@ -12,11 +13,10 @@ interface TemplateSelectorProps {
 export default function TemplateSelector({
   selectedTemplate,
   onSelectTemplate,
-  photoCount = 0,
 }: TemplateSelectorProps) {
   return (
     <div className="w-full">
-      <div className="space-y-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {SCRAPBOOK_TEMPLATES.map((template, index) => {
           const isSelected = selectedTemplate === template.id
           
@@ -25,62 +25,57 @@ export default function TemplateSelector({
               key={template.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.04 }}
               onClick={() => onSelectTemplate(template.id)}
               className={`
-                relative w-full text-left p-4 rounded-xl
-                transition-all flex items-center gap-4
+                relative text-left rounded-2xl overflow-hidden
+                transition-all flex flex-col border-2 bg-white shadow-xs
                 ${isSelected 
-                  ? 'ring-2 ring-pink-500 shadow-lg bg-pink-50' 
-                  : 'ring-1 ring-gray-200 bg-white'
+                  ? 'border-pink-500 ring-2 ring-pink-300 shadow-md scale-[1.02]' 
+                  : 'border-gray-200 hover:border-pink-300 hover:shadow-sm'
                 }
               `}
             >
-              {/* Icon */}
-              <div className="text-4xl flex-shrink-0">
-                {template.icon}
+              {/* Template Thumbnail Preview */}
+              <div className="relative w-full aspect-square bg-gray-50 overflow-hidden">
+                <Image
+                  src={template.imageSrc}
+                  alt={template.name}
+                  fill
+                  className="object-contain p-1.5"
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                />
+
+                {/* Selected Checkmark Badge */}
+                {isSelected && (
+                  <div className="absolute top-2 right-2 w-6 h-6 bg-pink-500 text-white rounded-full flex items-center justify-center shadow-md">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
               </div>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <h3 className="text-base font-bold text-gray-900 mb-0.5">
+              {/* Label */}
+              <div className="p-2.5 bg-white border-t border-gray-100 flex items-center justify-between">
+                <span className="font-bold text-xs sm:text-sm text-gray-900">
                   {template.name}
-                </h3>
-                <p className="text-xs text-gray-600 mb-1.5 line-clamp-2">
-                  {template.description}
-                </p>
-                <div className={`
-                  inline-block text-xs px-2 py-0.5 rounded-full
-                  ${isSelected 
-                    ? 'bg-pink-100 text-pink-700 font-medium' 
-                    : 'bg-gray-100 text-gray-600'
-                  }
-                `}>
-                  {template.bestFor}
-                </div>
+                </span>
+                {isSelected && (
+                  <span className="text-[10px] bg-pink-100 text-pink-700 font-bold px-2 py-0.5 rounded-full">
+                    Active
+                  </span>
+                )}
               </div>
-              
-              {/* Checkmark */}
-              {isSelected && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center flex-shrink-0"
-                >
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                </motion.div>
-              )}
             </motion.button>
           )
         })}
       </div>
 
       {/* Preview hint */}
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500">
-          Don't worry! You can change the template anytime 💕
+      <div className="mt-4 text-center">
+        <p className="text-xs text-gray-500">
+          💡 You can change the template anytime from your memory view 💕
         </p>
       </div>
     </div>

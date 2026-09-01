@@ -21,6 +21,7 @@ export default function PhotoUpload({
   maxSize = 10 * 1024 * 1024, // 10MB
   allowVideos = true,
 }: PhotoUploadProps) {
+  const [selectedFilesList, setSelectedFilesList] = useState<File[]>([])
   const [previews, setPreviews] = useState<{ url: string; type: 'image' | 'video' }[]>([])
   const [error, setError] = useState<string>('')
 
@@ -67,7 +68,7 @@ export default function PhotoUpload({
       if (validFiles.length === 0) return
 
       // Check total count
-      if (previews.length + validFiles.length > maxFiles) {
+      if (selectedFilesList.length + validFiles.length > maxFiles) {
         setError(`Maximum ${maxFiles} files allowed.`)
         return
       }
@@ -77,11 +78,13 @@ export default function PhotoUpload({
         url: URL.createObjectURL(file),
         type: isValidImageType(file) ? 'image' as const : 'video' as const,
       }))
+
+      const updatedFiles = [...selectedFilesList, ...validFiles]
+      setSelectedFilesList(updatedFiles)
       setPreviews((prev) => [...prev, ...newPreviews])
-        
-        onPhotosSelected(validFiles)
+      onPhotosSelected(updatedFiles)
     },
-    [maxFiles, maxSize, onPhotosSelected, previews.length, allowVideos]
+    [maxFiles, maxSize, onPhotosSelected, selectedFilesList, allowVideos]
   )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -97,7 +100,36 @@ export default function PhotoUpload({
   })
 
   const removePreview = (index: number) => {
-    setPreviews((prev) => prev.filter((_, i) => i !== index))
+    // Revoke object URL to prevent memory leaks
+    if (previews[index]?.url) {
+      URL.revokeObjectURL(previews[index].url)
+    }
+
+    const updatedPreviews = previews.filter((_, i) => i !== index)
+    const updatedFiles = selectedFilesList.filter((_, i) => i !== index)
+    
+    setPreviews(updatedPreviews)
+    setSelectedFilesList(updatedFiles)
+    onPhotosSelected(updatedFiles)
+  }
+
+  const movePhoto = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= selectedFilesList.length) return
+    const reorderedFiles = [...selectedFilesList]
+    const [movedFile] = reorderedFiles.splice(fromIndex, 1)
+    reorderedFiles.splice(toIndex, 0, movedFile)
+
+    const reorderedPreviews = [...previews]
+    const [movedPreview] = reorderedPreviews.splice(fromIndex, 1)
+    reorderedPreviews.splice(toIndex, 0, movedPreview)
+
+    setSelectedFilesList(reorderedFiles)
+    setPreviews(reorderedPreviews)
+    onPhotosSelected(reorderedFiles)
+  }
+
+  const setCover = (index: number) => {
+    movePhoto(index, 0)
   }
 
   return (
@@ -173,38 +205,53 @@ export default function PhotoUpload({
         )}
       </AnimatePresence>
 
-      {/* Preview Grid */}
+      {/* Preview Grid with Reordering */}
       {previews.length > 0 && (
         <div className="mt-6">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">
-            Selected Media ({previews.length})
-          </h4>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium text-gray-700">
+              Selected Media ({previews.length})
+            </h4>
+            <span className="text-[11px] text-pink-600 font-medium">
+              💡 First photo is your Cover
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {previews.map((preview, index) => (
               <motion.div
                 key={preview.url}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="relative aspect-square group"
+                className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all shadow-sm ${
+                  index === 0 ? 'border-pink-500 ring-2 ring-pink-300' : 'border-gray-200'
+                }`}
               >
                 {preview.type === 'image' ? (
                   <Image
                     src={preview.url}
                     alt={`Preview ${index + 1}`}
                     fill
-                    className="object-cover rounded-lg"
+                    className="object-cover"
                   />
                 ) : (
                   <video
                     src={preview.url}
-                    className="w-full h-full object-cover rounded-lg"
+                    className="w-full h-full object-cover"
                   />
+                )}
+
+                {/* Cover Badge */}
+                {index === 0 && (
+                  <div className="absolute top-1 left-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-md z-10">
+                    👑 Cover
+                  </div>
                 )}
                 
                 {/* Video Badge */}
                 {preview.type === 'video' && (
-                  <div className="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-0.5 rounded">
+                  <div className="absolute top-1 right-8 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded">
                     🎥 Video
                   </div>
                 )}
@@ -213,22 +260,56 @@ export default function PhotoUpload({
                 <button
                   onClick={() => removePreview(index)}
                   className="
-                    absolute -top-2 -right-2 w-6 h-6 sm:w-7 sm:h-7
-                    bg-red-500 text-white rounded-full
+                    absolute top-1 right-1 w-6 h-6
+                    bg-red-500/90 hover:bg-red-600 text-white rounded-full
                     flex items-center justify-center
-                    opacity-0 group-hover:opacity-100 transition-opacity
-                    shadow-lg
+                    shadow-md transition-transform active:scale-90 z-20
                   "
+                  title="Remove"
                   aria-label="Remove file"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
 
-                {/* Order Number */}
-                <div className="absolute bottom-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
-                  {index + 1}
+                {/* Bottom Control Bar for Order */}
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-1.5 flex items-center justify-between text-white text-xs z-10">
+                  <div className="flex items-center gap-1">
+                    <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                      #{index + 1}
+                    </span>
+                    {index > 0 && (
+                      <button
+                        onClick={() => setCover(index)}
+                        className="text-[10px] bg-pink-500/80 hover:bg-pink-500 px-1.5 py-0.5 rounded font-medium transition-colors"
+                        title="Set as Cover Photo"
+                      >
+                        Make Cover
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    {index > 0 && (
+                      <button
+                        onClick={() => movePhoto(index, index - 1)}
+                        className="w-5 h-5 rounded bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"
+                        title="Move Left"
+                      >
+                        ←
+                      </button>
+                    )}
+                    {index < previews.length - 1 && (
+                      <button
+                        onClick={() => movePhoto(index, index + 1)}
+                        className="w-5 h-5 rounded bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"
+                        title="Move Right"
+                      >
+                        →
+                      </button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}

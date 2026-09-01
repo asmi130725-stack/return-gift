@@ -49,7 +49,7 @@ export default function EventsPage() {
         <div className="container mx-auto px-4 py-4 sm:py-5 flex items-center justify-between">
           <Link href="/">
             <h1 className="text-2xl sm:text-3xl font-handwriting font-bold text-pink-600 uppercase">
-              Return Gift
+              Bookmarks
             </h1>
           </Link>
           

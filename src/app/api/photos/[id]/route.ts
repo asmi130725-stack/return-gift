@@ -39,3 +39,49 @@ export async function DELETE(
     )
   }
 }
+
+// PATCH update a photo (e.g. order)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const photoId = params.id
+    const body = await request.json()
+
+    if (!photoId) {
+      return NextResponse.json(
+        { error: 'Photo ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const updateData: any = {}
+    if (typeof body.order === 'number') {
+      updateData.order = body.order
+    }
+
+    const { data, error } = await supabase
+      .from('photos')
+      .update(updateData)
+      .eq('id', photoId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Database update error:', error)
+      return NextResponse.json(
+        { error: 'Failed to update photo' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ photo: data })
+  } catch (error) {
+    console.error('Error updating photo:', error)
+    return NextResponse.json(
+      { error: 'Failed to update photo' },
+      { status: 500 }
+    )
+  }
+}

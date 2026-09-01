@@ -1,50 +1,75 @@
 'use client'
 
-import { Photo } from '@/types'
+import { useState, useRef, useEffect } from 'react'
+import { Photo, LayoutStyle } from '@/types'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import PhotoCarousel from './PhotoCarousel'
+import { parseSoundtrackData, extractSpotifyTrackId } from '@/components/music/SpotifySongSelector'
 
 export const SCRAPBOOK_TEMPLATES = [
   {
     id: 'template1',
-    name: 'Pink Heart Frame',
-    description: 'Hand-drawn border with hearts',
-    icon: '💕',
-    bestFor: 'Romantic moments',
+    name: 'Template 1',
+    imageSrc: '/templates/template_1.jpg',
   },
   {
     id: 'template2',
-    name: 'Dried Flowers',
-    description: 'Textured paper with botanical touch',
-    icon: '🌿',
-    bestFor: 'Natural & vintage',
+    name: 'Template 2',
+    imageSrc: '/templates/template_2.jpg',
   },
   {
     id: 'template3',
-    name: 'Journal Page',
-    description: 'Scrapbook with decorative frames',
-    icon: '📖',
-    bestFor: 'Artistic memories',
+    name: 'Template 3',
+    imageSrc: '/templates/template_3.jpg',
+  },
+  {
+    id: 'template4',
+    name: 'Template 4',
+    imageSrc: '/templates/template_4.jpeg',
+  },
+  {
+    id: 'template5',
+    name: 'Template 5',
+    imageSrc: '/templates/template_5.jpeg',
   },
   {
     id: 'template6',
-    name: 'Floral Romance',
-    description: 'Beautiful flower border',
-    icon: '🌸',
-    bestFor: 'Elegant love',
+    name: 'Template 6',
+    imageSrc: '/templates/template_6.jpg',
+  },
+  {
+    id: 'template7',
+    name: 'Template 7',
+    imageSrc: '/templates/template_7.jpeg',
+  },
+  {
+    id: 'template8',
+    name: 'Template 8',
+    imageSrc: '/templates/template_8.jpeg',
+  },
+  {
+    id: 'template9',
+    name: 'Template 9',
+    imageSrc: '/templates/template_9.jpeg',
+  },
+  {
+    id: 'template10',
+    name: 'Template 10',
+    imageSrc: '/templates/template_10.jpeg',
   },
 ] as const
 
 interface ScrapbookLayoutProps {
   photos: Photo[]
-  layoutStyle: 'template1' | 'template2' | 'template3' | 'template6'
+  layoutStyle: LayoutStyle
   theme: string
   caption?: string
   eventTitle?: string
   eventDate?: string
   eventNotes?: string
   eventMood?: string
+  spotifyUrl?: string
 }
 
 export default function ScrapbookLayout({
@@ -56,19 +81,76 @@ export default function ScrapbookLayout({
   eventDate,
   eventNotes,
   eventMood,
+  spotifyUrl,
 }: ScrapbookLayoutProps) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const soundtrack = spotifyUrl ? parseSoundtrackData(spotifyUrl) : null
+  const playableAudioUrl = soundtrack?.previewUrl || (soundtrack?.url?.endsWith('.mp3') || soundtrack?.url?.includes('apple') ? soundtrack.url : null)
+  const spotifyTrackId = soundtrack?.url ? extractSpotifyTrackId(soundtrack.url) : (spotifyUrl ? extractSpotifyTrackId(spotifyUrl) : null)
+
+  const togglePlay = () => {
+    if (!audioRef.current && playableAudioUrl) {
+      const audio = new Audio(playableAudioUrl)
+      audio.volume = 0.6
+      audio.onended = () => setIsPlaying(false)
+      audioRef.current = audio
+    }
+
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause()
+        setIsPlaying(false)
+      } else {
+        audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.warn(e))
+      }
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [spotifyUrl])
+
   const renderLayout = () => {
+    const commonProps = {
+      photos,
+      caption,
+      eventDate,
+      eventTitle,
+      eventNotes,
+      eventMood,
+      spotifyUrl,
+      showDots: false,
+    }
+
     switch (layoutStyle) {
       case 'template1':
-        return <Template1Layout photos={photos} />
+        return <Template1Layout {...commonProps} />
       case 'template2':
-        return <Template2Layout photos={photos} />
+        return <Template2Layout {...commonProps} />
       case 'template3':
-        return <Template3Layout photos={photos} />
+        return <Template3Layout {...commonProps} />
+      case 'template4':
+        return <Template4Layout {...commonProps} />
+      case 'template5':
+        return <Template5Layout {...commonProps} />
       case 'template6':
-        return <Template6Layout photos={photos} />
+        return <Template6Layout {...commonProps} />
+      case 'template7':
+        return <Template7Layout {...commonProps} />
+      case 'template8':
+        return <Template8Layout {...commonProps} />
+      case 'template9':
+        return <Template9Layout {...commonProps} />
+      case 'template10':
+        return <Template10Layout {...commonProps} />
       default:
-        return <Template1Layout photos={photos} />
+        return <Template1Layout {...commonProps} />
     }
   }
 
@@ -79,10 +161,32 @@ export default function ScrapbookLayout({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-2 bg-gradient-to-r from-pink-50 via-rose-50 to-amber-50 rounded-lg p-2 border border-pink-200"
+          className="relative mb-2 bg-gradient-to-r from-pink-50 via-rose-50 to-amber-50 rounded-lg p-2 border border-pink-200"
         >
+          {/* Small Soundtrack Play Button (top-right) */}
+          {playableAudioUrl ? (
+            <button
+              type="button"
+              onClick={togglePlay}
+              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white flex items-center justify-center text-xs shadow-xs active:scale-95 transition-transform"
+              title={isPlaying ? 'Pause Song' : 'Play Song'}
+            >
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+          ) : spotifyTrackId ? (
+            <a
+              href={`https://open.spotify.com/track/${spotifyTrackId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-white flex items-center justify-center text-xs shadow-xs active:scale-95 transition-transform"
+              title="Open in Spotify"
+            >
+              ▶
+            </a>
+          ) : null}
+
           {eventTitle && (
-            <h2 className="text-base font-handwriting font-bold text-gray-800 text-center mb-0.5">
+            <h2 className="text-base font-handwriting font-bold text-gray-800 text-center mb-0.5 pr-6 pl-6">
               {eventTitle}
             </h2>
           )}
@@ -126,204 +230,249 @@ export default function ScrapbookLayout({
         </motion.div>
       )}
       
+      {/* The Template Frame */}
       {renderLayout()}
+
+      {/* Navigation Dots Below the Entire Template */}
+      {photos.length > 1 && (
+        <div className="flex justify-center gap-1.5 mt-3 pb-1">
+          {photos.map((_, index) => (
+            <div
+              key={index}
+              className="w-2 h-2 rounded-full bg-pink-300"
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
-// Template 1: Pink Heart Frame - 1 photo when > 2, otherwise up to 3
-function Template1Layout({ photos }: { photos: Photo[] }) {
-  const displayPhotos = photos.length > 2 ? [photos[0]] : photos.slice(0, 3)
-  
+interface TemplateProps {
+  photos: Photo[]
+  caption?: string
+  eventDate?: string
+  eventTitle?: string
+  eventNotes?: string
+  eventMood?: string
+  spotifyUrl?: string
+  showDots?: boolean
+}
+
+// Template 1: Pink Heart Frame (1:1 Square)
+function Template1Layout(props: TemplateProps) {
+  if (props.photos.length === 0) return null
+
   return (
-    <div className="relative w-full aspect-square max-w-2xl mx-auto">
+    <div className="relative w-full aspect-square max-w-xl mx-auto">
       <Image
         src="/templates/template_1.jpg"
-        alt="Template background"
+        alt="Template 1"
         fill
-        className="object-contain"
+        sizes="(max-width: 768px) 100vw, 600px"
+        className="object-contain pointer-events-none"
+        priority
       />
-      
-      {photos.length > 2 ? (
-        <div className="absolute inset-0 flex items-center justify-center p-[15%]">
-          <PhotoCarousel photos={photos} />
-        </div>
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center p-[15%]">
-          <div className={`grid gap-2 w-full h-full ${
-            displayPhotos.length === 1 ? 'grid-cols-1' : 
-            displayPhotos.length === 2 ? 'grid-cols-2' : 
-            'grid-cols-2'
-          }`}>
-            {displayPhotos.map((photo, index) => (
-              <motion.div
-                key={photo.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative w-full h-full rounded-lg overflow-hidden shadow-lg"
-              >
-                <Image
-                  src={photo.url}
-                  alt={`Photo ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// Template 2: Dried Flowers - 1 photo when > 2, otherwise up to 4
-function Template2Layout({ photos }: { photos: Photo[] }) {
-  const displayPhotos = photos.length > 2 ? [photos[0]] : photos.slice(0, 4)
-  
-  return (
-    <div className="relative w-full aspect-[3/4] max-w-2xl mx-auto">
-      <Image
-        src="/templates/template_2.jpg"
-        alt="Template background"
-        fill
-        className="object-contain"
-      />
-      
-      {photos.length > 2 ? (
-        <div className="absolute top-[5%] left-[8%] right-[8%] bottom-[15%]">
-          <PhotoCarousel photos={photos} />
-        </div>
-      ) : (
-        <div className="absolute top-[5%] left-[8%] right-[8%] bottom-[15%]">
-          <div className={`grid gap-4 w-full h-full ${
-            displayPhotos.length === 1 ? 'grid-cols-1' : 
-            displayPhotos.length === 2 ? 'grid-cols-2' : 
-            displayPhotos.length === 3 ? 'grid-cols-3' : 
-            'grid-cols-2 grid-rows-2'
-          }`}>
-            {displayPhotos.map((photo, index) => (
-              <motion.div
-                key={photo.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative w-full h-full rounded-lg overflow-hidden shadow-xl"
-              >
-                <Image
-                  src={photo.url}
-                  alt={`Photo ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// Template 3: Journal Page - 1 photo when > 2, otherwise up to 3
-function Template3Layout({ photos }: { photos: Photo[] }) {
-  const zones = [
-    { top: '8%', left: '10%', width: '35%', height: '32%', rotate: -3 },
-    { top: '35%', left: '50%', width: '38%', height: '35%', rotate: 2 },
-    { top: '68%', left: '12%', width: '32%', height: '28%', rotate: -2 },
-  ]
-  
-  const displayPhotos = photos.length > 2 ? [photos[0]] : photos.slice(0, 3)
-  
-  return (
-    <div className="relative w-full aspect-square max-w-2xl mx-auto">
-      <Image
-        src="/templates/template_3.jpg"
-        alt="Template background"
-        fill
-        className="object-contain"
-      />
-      
-      <div className="absolute inset-0">
-        {photos.length > 2 ? (
-          <div className="absolute inset-0 flex items-center justify-center p-[10%]">
-            <PhotoCarousel photos={photos} />
-          </div>
-        ) : (
-          displayPhotos.map((photo, index) => {
-            const zone = zones[index]
-            return (
-              <motion.div
-                key={photo.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="absolute overflow-hidden shadow-md rounded"
-                style={{
-                  top: zone.top,
-                  left: zone.left,
-                  width: zone.width,
-                  height: zone.height,
-                  transform: `rotate(${zone.rotate}deg)`,
-                }}
-              >
-                <Image
-                  src={photo.url}
-                  alt={`Photo ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </motion.div>
-            )
-          })
-        )}
+      <div className="absolute inset-0 flex items-center justify-center p-[14%]">
+        <PhotoCarousel {...props} />
       </div>
     </div>
   )
 }
 
-// Template 6: Floral Romance - 1 photo when > 2, otherwise up to 3
-function Template6Layout({ photos }: { photos: Photo[] }) {
-  const displayPhotos = photos.length > 2 ? [photos[0]] : photos.slice(0, 3)
-  
+// Template 2: Kraft Paper with Dried Flowers at Bottom
+function Template2Layout(props: TemplateProps) {
+  if (props.photos.length === 0) return null
+
   return (
-    <div className="relative w-full aspect-[3/4] max-w-xl mx-auto">
+    <div className="relative w-full aspect-[1424/2000] max-w-md mx-auto">
+      <Image
+        src="/templates/template_2.jpg"
+        alt="Template 2"
+        fill
+        sizes="(max-width: 768px) 100vw, 450px"
+        className="object-contain pointer-events-none"
+        priority
+      />
+      {/* Kraft paper top area above bottom dried flowers */}
+      <div className="absolute top-[10%] bottom-[33%] left-[14%] right-[14%] flex items-center justify-center">
+        <PhotoCarousel {...props} />
+      </div>
+    </div>
+  )
+}
+
+// Template 3: Journal Notebook Spread
+function Template3Layout(props: TemplateProps) {
+  if (props.photos.length === 0) return null
+
+  return (
+    <div className="relative w-full aspect-[1333/2000] max-w-md mx-auto">
+      <Image
+        src="/templates/template_3.jpg"
+        alt="Template 3"
+        fill
+        sizes="(max-width: 768px) 100vw, 450px"
+        className="object-contain pointer-events-none"
+        priority
+      />
+      {/* Journal page center area */}
+      <div className="absolute top-[20%] bottom-[25%] left-[17%] right-[22%] flex items-center justify-center">
+        <PhotoCarousel {...props} />
+      </div>
+    </div>
+  )
+}
+
+// Template 4: Vintage Framed Photo on Kraft Paper with Flowers
+function Template4Layout(props: TemplateProps) {
+  if (props.photos.length === 0) return null
+
+  return (
+    <div className="relative w-full aspect-[9/16] max-w-md mx-auto">
+      <Image
+        src="/templates/template_4.jpeg"
+        alt="Template 4"
+        fill
+        sizes="(max-width: 768px) 100vw, 450px"
+        className="object-contain pointer-events-none"
+        priority
+      />
+      {/* Fitted inside the horizontal vintage photo frame */}
+      <div className="absolute top-[28%] bottom-[34%] left-[4.5%] right-[2%] flex items-center justify-center">
+        <PhotoCarousel {...props} />
+      </div>
+    </div>
+  )
+}
+
+// Template 5: Red Poppies (Flowers at top & bottom, central horizontal cutout)
+function Template5Layout(props: TemplateProps) {
+  if (props.photos.length === 0) return null
+
+  return (
+    <div className="relative w-full aspect-[9/16] max-w-md mx-auto">
+      <Image
+        src="/templates/template_5.jpeg"
+        alt="Template 5"
+        fill
+        sizes="(max-width: 768px) 100vw, 450px"
+        className="object-contain pointer-events-none"
+        priority
+      />
+      {/* Positioned comfortably down in the middle white cutout and expanded horizontally */}
+      <div className="absolute top-[37%] bottom-[25%] -left-[4%] -right-[4%] flex items-center justify-center">
+        <PhotoCarousel {...props} />
+      </div>
+    </div>
+  )
+}
+
+// Template 6: Floral Romance
+function Template6Layout(props: TemplateProps) {
+  if (props.photos.length === 0) return null
+
+  return (
+    <div className="relative w-full aspect-[2/3] max-w-md mx-auto">
       <Image
         src="/templates/template_6.jpg"
-        alt="Template background"
+        alt="Template 6"
         fill
-        className="object-contain"
+        sizes="(max-width: 768px) 100vw, 450px"
+        className="object-contain pointer-events-none"
+        priority
       />
-      
-      {photos.length > 2 ? (
-        <div className="absolute inset-0 flex items-center justify-center px-[20%] py-[15%] pb-[25%]">
-          <PhotoCarousel photos={photos} />
-        </div>
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center px-[20%] py-[15%] pb-[25%]">
-          <div className={`grid gap-2 w-full h-full ${
-            displayPhotos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
-          }`}>
-            {displayPhotos.map((photo, index) => (
-              <motion.div
-                key={photo.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative w-full h-full rounded-lg overflow-hidden shadow-lg"
-              >
-                <Image
-                  src={photo.url}
-                  alt={`Photo ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="absolute inset-0 flex items-center justify-center px-[16%] py-[14%] pb-[20%]">
+        <PhotoCarousel {...props} />
+      </div>
+    </div>
+  )
+}
+
+// Template 7: Pink Hibiscus Polaroid Frame (Fitted precisely over polaroid box)
+function Template7Layout(props: TemplateProps) {
+  if (props.photos.length === 0) return null
+
+  return (
+    <div className="relative w-full aspect-[9/16] max-w-md mx-auto">
+      <Image
+        src="/templates/template_7.jpeg"
+        alt="Template 7"
+        fill
+        sizes="(max-width: 768px) 100vw, 450px"
+        className="object-contain pointer-events-none"
+        priority
+      />
+      {/* Positioned higher to cover the polaroid frame box completely */}
+      <div className="absolute top-[26%] bottom-[37.5%] left-[17.5%] right-[17.5%] flex items-center justify-center">
+        <PhotoCarousel {...props} />
+      </div>
+    </div>
+  )
+}
+
+// Template 8: Pink Lilies (Lilies at top & bottom, seamless central horizontal cutout)
+function Template8Layout(props: TemplateProps) {
+  if (props.photos.length === 0) return null
+
+  return (
+    <div className="relative w-full aspect-[9/16] max-w-md mx-auto">
+      <Image
+        src="/templates/template_8.jpeg"
+        alt="Template 8"
+        fill
+        sizes="(max-width: 768px) 100vw, 450px"
+        className="object-contain pointer-events-none"
+        priority
+      />
+      {/* Positioned comfortably down in the middle white cutout and expanded horizontally */}
+      <div className="absolute top-[37%] bottom-[25%] -left-[4%] -right-[4%] flex items-center justify-center">
+        <PhotoCarousel {...props} />
+      </div>
+    </div>
+  )
+}
+
+// Template 9: Hearts Background + White Polaroid with Ribbon Bow
+function Template9Layout(props: TemplateProps) {
+  if (props.photos.length === 0) return null
+
+  return (
+    <div className="relative w-full aspect-[9/16] max-w-md mx-auto">
+      <Image
+        src="/templates/template_9.jpeg"
+        alt="Template 9"
+        fill
+        sizes="(max-width: 768px) 100vw, 450px"
+        className="object-contain pointer-events-none"
+        priority
+      />
+      {/* Inside white polaroid frame area */}
+      <div className="absolute top-[18%] bottom-[25.5%] left-[12%] right-[12%] flex items-center justify-center">
+        <PhotoCarousel {...props} />
+      </div>
+    </div>
+  )
+}
+
+// Template 10: Pink Card with Washi Tape & Bouquet
+function Template10Layout(props: TemplateProps) {
+  if (props.photos.length === 0) return null
+
+  return (
+    <div className="relative w-full aspect-[9/16] max-w-md mx-auto">
+      <Image
+        src="/templates/template_10.jpeg"
+        alt="Template 10"
+        fill
+        sizes="(max-width: 768px) 100vw, 450px"
+        className="object-contain pointer-events-none"
+        priority
+      />
+      {/* Moved down from top with comfortable padding */}
+      <div className="absolute top-[18%] bottom-[24%] left-[16%] right-[16%] flex items-center justify-center">
+        <PhotoCarousel {...props} />
+      </div>
     </div>
   )
 }

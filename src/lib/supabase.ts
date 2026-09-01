@@ -23,6 +23,7 @@ export async function getEvents(userId: string) {
     layoutStyle: event.layout_style,
     colorTheme: event.color_theme,
     aiCaption: event.ai_caption,
+    spotifyUrl: event.spotify_url || event.background_music,
     createdAt: event.created_at,
     updatedAt: event.updated_at,
   }))
@@ -44,6 +45,7 @@ export async function getEvent(eventId: string) {
     layoutStyle: data.layout_style,
     colorTheme: data.color_theme,
     aiCaption: data.ai_caption,
+    spotifyUrl: data.spotify_url || data.background_music,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   }
@@ -55,18 +57,37 @@ export async function createEvent(event: {
   date: Date
   notes?: string
   mood?: string
+  spotifyUrl?: string
 }) {
-  const { data, error } = await supabase
+  const insertPayload: any = {
+    user_id: event.userId,
+    title: event.title,
+    date: event.date.toISOString(),
+    notes: event.notes,
+    mood: event.mood,
+  }
+
+  if (event.spotifyUrl) {
+    insertPayload.spotify_url = event.spotifyUrl
+  }
+
+  let { data, error } = await supabase
     .from('events')
-    .insert({
-      user_id: event.userId,
-      title: event.title,
-      date: event.date.toISOString(),
-      notes: event.notes,
-      mood: event.mood,
-    })
+    .insert(insertPayload)
     .select()
     .single()
+
+  // Fallback: If spotify_url column is not in the database table, retry without it
+  if (error && (error.code === 'PGRST204' || error.message?.includes('spotify_url'))) {
+    delete insertPayload.spotify_url
+    const retry = await supabase
+      .from('events')
+      .insert(insertPayload)
+      .select()
+      .single()
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) throw error
   
@@ -77,18 +98,44 @@ export async function createEvent(event: {
     layoutStyle: data.layout_style,
     colorTheme: data.color_theme,
     aiCaption: data.ai_caption,
+    spotifyUrl: data?.spotify_url || event.spotifyUrl,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   }
 }
 
 export async function updateEvent(eventId: string, updates: any) {
-  const { data, error } = await supabase
+  const updatePayload = { ...updates }
+  if (updates.spotifyUrl !== undefined) {
+    updatePayload.spotify_url = updates.spotifyUrl
+    delete updatePayload.spotifyUrl
+  }
+
+  let { data, error } = await supabase
     .from('events')
-    .update(updates)
+    .update(updatePayload)
     .eq('id', eventId)
     .select()
     .single()
+
+  // Fallback if spotify_url column missing or layout_style check constraint violates
+  if (error) {
+    if (error.code === 'PGRST204' || error.message?.includes('spotify_url')) {
+      delete updatePayload.spotify_url
+    }
+    if (error.code === '23514' || error.message?.includes('layout_style')) {
+      delete updatePayload.layout_style
+      delete updatePayload.layoutStyle
+    }
+    const retry = await supabase
+      .from('events')
+      .update(updatePayload)
+      .eq('id', eventId)
+      .select()
+      .single()
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) throw error
   
@@ -99,6 +146,7 @@ export async function updateEvent(eventId: string, updates: any) {
     layoutStyle: data.layout_style,
     colorTheme: data.color_theme,
     aiCaption: data.ai_caption,
+    spotifyUrl: data?.spotify_url || updates.spotifyUrl,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   }
@@ -120,22 +168,39 @@ export async function createPhoto(photo: {
   order: number
   mediaType?: 'image' | 'video'
 }) {
-  const { data, error } = await supabase
+  const insertPayload: any = {
+    event_id: photo.eventId,
+    url: photo.url,
+    public_id: photo.publicId,
+    order: photo.order,
+  }
+
+  if (photo.mediaType) {
+    insertPayload.media_type = photo.mediaType
+  }
+
+  let { data, error } = await supabase
     .from('photos')
-    .insert({
-      event_id: photo.eventId,
-      url: photo.url,
-      public_id: photo.publicId,
-      order: photo.order,
-      media_type: photo.mediaType || 'image',
-    })
+    .insert(insertPayload)
     .select()
     .single()
+
+  // Fallback: If media_type column is not in the database table, retry without it
+  if (error && (error.code === 'PGRST204' || error.message?.includes('media_type'))) {
+    delete insertPayload.media_type
+    const retry = await supabase
+      .from('photos')
+      .insert(insertPayload)
+      .select()
+      .single()
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) throw error
   return {
     ...data,
-    mediaType: data.media_type,
+    mediaType: data?.media_type || photo.mediaType || 'image',
   }
 }
 

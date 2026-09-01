@@ -29,13 +29,16 @@ const dancing = Dancing_Script({
 })
 
 export const metadata: Metadata = {
-  title: 'Return Gift - AI-Powered Digital Scrapbook',
-  description: 'Create beautiful, AI-generated scrapbook pages from your cherished memories',
+  title: 'Bookmarks - Digital Memory Scrapbook',
+  description: 'Bookmark your cherished moments and create AI-crafted memories',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Return Gift',
+    title: 'Bookmarks',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
   },
 }
 

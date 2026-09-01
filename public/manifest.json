@@ -1,7 +1,7 @@
 {
-  "name": "Return Gift",
-  "short_name": "Return Gift",
-  "description": "AI-Powered Digital Scrapbook for your cherished memories",
+  "name": "Bookmarks",
+  "short_name": "Bookmarks",
+  "description": "Bookmark your cherished memories in an AI-powered digital scrapbook",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FFF5F7",

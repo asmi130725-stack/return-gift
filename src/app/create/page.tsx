@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { compressImage } from '@/lib/compression'
 import toast from 'react-hot-toast'
+import SpotifySongSelector from '@/components/music/SpotifySongSelector'
 
 // For demo purposes, using a hardcoded user ID
 // In production, you'd get this from authentication
@@ -23,6 +24,7 @@ export default function CreateEventPage() {
     date: new Date().toISOString().split('T')[0],
     notes: '',
     mood: '' as MoodType | '',
+    spotifyUrl: '',
   })
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
@@ -56,6 +58,7 @@ export default function CreateEventPage() {
           date: formData.date,
           notes: formData.notes,
           mood: formData.mood || 'romantic', // Default to romantic if not selected
+          spotifyUrl: formData.spotifyUrl || undefined,
         }),
       })
 
@@ -294,6 +297,12 @@ export default function CreateEventPage() {
               />
             </div>
 
+            {/* Spotify / Song Selector */}
+            <SpotifySongSelector
+              value={formData.spotifyUrl}
+              onChange={(url) => setFormData(prev => ({ ...prev, spotifyUrl: url }))}
+            />
+
             <button
               onClick={handleNext}
               disabled={!formData.title || !formData.date}
@@ -327,7 +336,7 @@ export default function CreateEventPage() {
             </div>
 
             <PhotoUpload
-              onPhotosSelected={(files) => setSelectedFiles(prev => [...prev, ...files])}
+              onPhotosSelected={(files) => setSelectedFiles(files)}
               maxFiles={20}
             />
 

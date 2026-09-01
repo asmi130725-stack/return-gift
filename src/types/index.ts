@@ -1,7 +1,7 @@
 // TypeScript types for the application
 
 export type MoodType = 'romantic' | 'playful' | 'nostalgic' | 'adventurous' | 'joyful' | 'peaceful'
-export type LayoutStyle = 'template1' | 'template2' | 'template3' | 'template6'
+export type LayoutStyle = 'template1' | 'template2' | 'template3' | 'template4' | 'template5' | 'template6' | 'template7' | 'template8' | 'template9' | 'template10'
 
 export interface User {
   id: string
@@ -22,6 +22,7 @@ export interface Event {
   aiCaption?: string
   videoUrl?: string
   backgroundMusic?: string
+  spotifyUrl?: string
   createdAt: Date
   updatedAt: Date
 }

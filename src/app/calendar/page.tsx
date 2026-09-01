@@ -39,21 +39,22 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-rose-50/70 via-pink-50/30 to-slate-50 pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-rose-50/70 via-pink-50/30 to-slate-50 pb-32">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-pink-100 sticky top-0 z-50">
         <div className="px-4 py-3.5 flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-2">
-            <span className="text-xl">🎁</span>
+            <span className="text-xl">🔖</span>
             <h1 className="text-2xl font-handwriting font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent uppercase tracking-wider">
-              Return Gift
+              Bookmarks
             </h1>
           </div>
           <Link
             href="/create"
-            className="text-xs font-semibold text-pink-600 bg-pink-50 hover:bg-pink-100 px-3 py-1.5 rounded-full transition-colors"
+            className="inline-flex items-center justify-center gap-1 text-xs font-semibold text-pink-600 bg-pink-50 hover:bg-pink-100 px-3.5 py-1.5 rounded-full border border-pink-200/70 shadow-sm transition-all active:scale-95 text-center leading-none"
           >
-            + New Memory
+            <span className="text-sm font-bold leading-none -mt-0.5">+</span>
+            <span className="leading-none">New Memory</span>
           </Link>
         </div>
       </header>

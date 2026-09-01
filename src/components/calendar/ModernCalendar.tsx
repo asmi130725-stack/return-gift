@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Event } from '@/types'
 
 const MONTHS = [
@@ -11,6 +12,15 @@ const MONTHS = [
 ]
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const MOOD_EMOJIS: Record<string, string> = {
+  romantic: '💖',
+  playful: '🎉',
+  nostalgic: '☕',
+  adventurous: '🚀',
+  joyful: '✨',
+  peaceful: '🌿',
+}
 
 interface ModernCalendarProps {
   events: Event[]
@@ -22,7 +32,7 @@ export default function ModernCalendar({ events, loading = false }: ModernCalend
   const today = new Date()
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth())
   const [selectedYear, setSelectedYear] = useState(today.getFullYear())
-  const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null)
+  const [selectedDay, setSelectedDay] = useState<number>(today.getDate())
 
   const isCurrentMonthView = 
     selectedMonth === today.getMonth() && selectedYear === today.getFullYear()
@@ -64,6 +74,7 @@ export default function ModernCalendar({ events, loading = false }: ModernCalend
   const resetToToday = () => {
     setSelectedMonth(today.getMonth())
     setSelectedYear(today.getFullYear())
+    setSelectedDay(today.getDate())
   }
 
   const daysInMonth = getDaysInMonth(selectedMonth, selectedYear)
@@ -71,47 +82,44 @@ export default function ModernCalendar({ events, loading = false }: ModernCalend
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
   const emptyDays = Array.from({ length: firstDay }, (_, i) => i)
 
-  // Current month's events
-  const currentMonthEvents = events.filter(event => {
-    const eventDate = new Date(event.date)
-    return eventDate.getMonth() === selectedMonth && eventDate.getFullYear() === selectedYear
-  })
+  const selectedEvent = selectedDay ? getEventForDate(selectedDay) : null
+  const formatSelectedDate = (includeYear = false) => {
+    const d = new Date(selectedYear, selectedMonth, selectedDay)
+    const dayName = DAYS[d.getDay()]
+    const monthName = MONTHS[selectedMonth].slice(0, 3)
+    return includeYear ? `${dayName}, ${monthName} ${selectedDay}, ${selectedYear}` : `${dayName}, ${monthName} ${selectedDay}`
+  }
 
   return (
     <div className="w-full space-y-4">
-      {/* Main Calendar Card */}
+      {/* Calendar Card Container */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative bg-white/90 backdrop-blur-xl rounded-3xl p-5 sm:p-6 shadow-xl shadow-pink-500/5 border border-pink-100/90 overflow-hidden"
+        className="bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-5 shadow-lg shadow-pink-500/5 border border-pink-100"
       >
-        {/* Soft Ambient Corner Glows */}
-        <div className="absolute -top-16 -right-16 w-36 h-36 bg-gradient-to-br from-pink-200/40 to-rose-200/20 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-16 -left-16 w-36 h-36 bg-gradient-to-tr from-amber-200/30 to-pink-200/30 rounded-full blur-2xl pointer-events-none" />
-
-        {/* Header / Month Navigation */}
-        <div className="relative z-10 flex items-center justify-between mb-6">
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight">
+        {/* Header: Month & Navigation */}
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-pink-100/70">
+          <div>
+            <div className="flex items-baseline gap-1.5">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
                 {MONTHS[selectedMonth]}
               </h3>
-              <span className="text-lg sm:text-xl font-semibold text-pink-600 font-sans">
+              <span className="text-base font-bold text-pink-600">
                 {selectedYear}
               </span>
             </div>
-            <p className="text-xs text-gray-400 font-medium">
-              {currentMonthEvents.length === 1
-                ? '1 memory this month'
-                : `${currentMonthEvents.length} memories this month`}
+            <p className="text-[11px] text-gray-500 font-medium">
+              {events.filter(e => new Date(e.date).getMonth() === selectedMonth && new Date(e.date).getFullYear() === selectedYear).length} memories recorded
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-pink-50/70 p-1 rounded-2xl border border-pink-100">
+          {/* Navigation Controls */}
+          <div className="flex items-center gap-1 bg-pink-50/80 p-1 rounded-2xl border border-pink-100">
             {!isCurrentMonthView && (
               <button
                 onClick={resetToToday}
-                className="px-2.5 py-1 text-xs font-semibold text-pink-600 hover:bg-white rounded-xl transition-all shadow-none hover:shadow-sm"
+                className="px-2 py-1 text-[11px] font-bold text-pink-600 hover:bg-white rounded-xl transition-all"
               >
                 Today
               </button>
@@ -119,7 +127,7 @@ export default function ModernCalendar({ events, loading = false }: ModernCalend
             <button
               onClick={previousMonth}
               aria-label="Previous Month"
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-600 hover:text-pink-600 hover:bg-white transition-all active:scale-90 shadow-none hover:shadow-sm"
+              className="w-7 h-7 rounded-xl flex items-center justify-center text-gray-600 hover:text-pink-600 hover:bg-white transition-all active:scale-90"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -128,7 +136,7 @@ export default function ModernCalendar({ events, loading = false }: ModernCalend
             <button
               onClick={nextMonth}
               aria-label="Next Month"
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-600 hover:text-pink-600 hover:bg-white transition-all active:scale-90 shadow-none hover:shadow-sm"
+              className="w-7 h-7 rounded-xl flex items-center justify-center text-gray-600 hover:text-pink-600 hover:bg-pink-50 transition-all active:scale-90"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -138,12 +146,12 @@ export default function ModernCalendar({ events, loading = false }: ModernCalend
         </div>
 
         {/* Day Name Headers */}
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2 text-center">
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5 mb-2 text-center">
           {DAYS.map((day, idx) => (
             <div
               key={day}
-              className={`text-[11px] font-bold tracking-wider uppercase py-1 ${
-                idx === 0 || idx === 6 ? 'text-rose-400' : 'text-gray-400'
+              className={`text-[11px] font-bold uppercase tracking-wider py-0.5 select-none ${
+                idx === 0 || idx === 6 ? 'text-rose-500 font-extrabold' : 'text-gray-400'
               }`}
             >
               {day}
@@ -152,7 +160,7 @@ export default function ModernCalendar({ events, loading = false }: ModernCalend
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
           {emptyDays.map(i => (
             <div key={`empty-${i}`} className="aspect-square" />
           ))}
@@ -163,84 +171,126 @@ export default function ModernCalendar({ events, loading = false }: ModernCalend
               day === today.getDate() &&
               selectedMonth === today.getMonth() &&
               selectedYear === today.getFullYear()
+            const isSelected = selectedDay === day
 
             return (
-              <div key={day} className="aspect-square relative">
-                {event ? (
-                  <motion.button
-                    whileHover={{ scale: 1.08 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => router.push(`/scrapbook/${event.id}`)}
-                    onMouseEnter={() => setHoveredEvent(event)}
-                    onMouseLeave={() => setHoveredEvent(null)}
-                    className={`
-                      w-full h-full rounded-2xl flex flex-col items-center justify-center relative
-                      bg-gradient-to-br from-pink-500 via-rose-500 to-pink-600 text-white font-bold
-                      shadow-md shadow-pink-500/25 ring-2
-                      ${isToday ? 'ring-pink-300 ring-offset-2' : 'ring-pink-200/60'}
-                      transition-shadow hover:shadow-lg hover:shadow-pink-500/40
-                    `}
-                  >
-                    <span className="text-xs sm:text-sm">{day}</span>
-                    <span className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5">
-                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white fill-current animate-pulse" viewBox="0 0 24 24">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                      </svg>
-                    </span>
-                  </motion.button>
-                ) : isToday ? (
-                  <div className="w-full h-full rounded-2xl bg-pink-50/90 border-2 border-pink-400 text-pink-600 font-bold flex flex-col items-center justify-center relative shadow-sm">
-                    <span className="text-xs sm:text-sm">{day}</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500 mt-0.5" />
-                  </div>
-                ) : (
-                  <div className="w-full h-full rounded-2xl bg-slate-50/70 hover:bg-pink-50/60 text-slate-700 hover:text-pink-600 font-medium text-xs sm:text-sm flex items-center justify-center transition-colors">
-                    {day}
-                  </div>
+              <motion.button
+                key={day}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedDay(day)}
+                className={`
+                  aspect-square rounded-xl relative flex flex-col items-center justify-center transition-all
+                  ${
+                    event
+                      ? 'bg-gradient-to-br from-pink-500 via-rose-500 to-pink-600 text-white font-bold shadow-md shadow-pink-500/25 ring-2 ring-pink-300'
+                      : isToday
+                      ? 'bg-pink-50 border-2 border-pink-500 text-pink-600 font-extrabold shadow-sm'
+                      : isSelected
+                      ? 'bg-pink-100 text-pink-900 font-bold border-2 border-pink-300'
+                      : 'bg-slate-50/70 hover:bg-pink-50/80 text-gray-700 hover:text-pink-600 font-medium'
+                  }
+                `}
+              >
+                <span className="text-xs sm:text-sm">{day}</span>
+
+                {/* Event Heart Icon */}
+                {event && (
+                  <span className="absolute bottom-0.5 right-0.5">
+                    <svg className="w-2.5 h-2.5 text-white fill-current" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                  </span>
                 )}
-              </div>
+
+                {/* Today Dot */}
+                {isToday && !event && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-pink-500 mt-0.5" />
+                )}
+              </motion.button>
             )
           })}
         </div>
 
         {/* Legend */}
-        <div className="mt-6 pt-4 border-t border-pink-100/80 flex items-center justify-center gap-6 text-xs text-gray-500">
+        <div className="mt-4 pt-3 border-t border-pink-100 flex items-center justify-center gap-5 text-xs text-gray-600">
           <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-3.5 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white text-[8px] shadow-sm">
+            <span className="w-3.5 h-3.5 rounded-md bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white text-[8px] shadow-sm">
               ♥
             </span>
-            <span className="font-medium text-gray-600">Memory Saved</span>
+            <span className="font-semibold text-gray-700">Memory Saved</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full border-2 border-pink-400 bg-pink-50" />
-            <span className="font-medium text-gray-600">Today</span>
+            <span className="w-3 h-3 rounded-full border-2 border-pink-500 bg-pink-50" />
+            <span className="font-semibold text-gray-700">Today</span>
           </div>
         </div>
       </motion.div>
 
-      {/* Hover / Month Memory Spotlight */}
-      <AnimatePresence>
-        {hoveredEvent && (
+      {/* Selected Day Spotlight Preview Card */}
+      <AnimatePresence mode="wait">
+        {selectedEvent ? (
           <motion.div
-            initial={{ opacity: 0, y: 5 }}
+            key={`event-${selectedEvent.id}`}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 5 }}
-            className="p-3 bg-pink-50/90 border border-pink-200 rounded-2xl flex items-center justify-between text-xs text-pink-900 shadow-sm"
+            exit={{ opacity: 0, y: -8 }}
+            className="bg-white rounded-2xl p-4 border border-pink-200 shadow-md shadow-pink-500/5 relative"
           >
-            <div className="flex items-center gap-2">
-              <span className="text-base">💝</span>
+            <div className="flex items-start justify-between gap-2 mb-1.5">
               <div>
-                <p className="font-bold text-gray-800">{hoveredEvent.title}</p>
-                <p className="text-gray-500 text-[11px]">
-                  {new Date(hoveredEvent.date).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
+                <p suppressHydrationWarning className="text-[11px] font-semibold text-pink-600 uppercase tracking-wide">
+                  {formatSelectedDate(true)}
                 </p>
+                <h4 className="text-base font-bold text-gray-900">
+                  {selectedEvent.title}
+                </h4>
               </div>
+              <span className="text-xs bg-pink-50 border border-pink-200 text-pink-700 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 shrink-0">
+                <span>{MOOD_EMOJIS[selectedEvent.mood || 'romantic'] || '💖'}</span>
+                <span className="capitalize">{selectedEvent.mood || 'Memory'}</span>
+              </span>
             </div>
-            <span className="text-[11px] font-semibold text-pink-600 underline">View Scrapbook →</span>
+
+            {selectedEvent.notes && (
+              <p className="text-xs text-gray-600 italic bg-pink-50/50 p-2 rounded-xl border border-pink-100 mb-3">
+                "{selectedEvent.notes}"
+              </p>
+            )}
+
+            <button
+              onClick={() => router.push(`/scrapbook/${selectedEvent.id}`)}
+              className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl text-xs font-bold shadow-sm hover:shadow-md active:scale-98 transition-all flex items-center justify-center gap-1.5"
+            >
+              <span>📖 Open Scrapbook</span>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key={`empty-${selectedDay}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="bg-white/90 backdrop-blur-sm rounded-2xl p-3.5 sm:p-4 border border-pink-100 shadow-sm flex items-center justify-between gap-3"
+          >
+            <div>
+              <p suppressHydrationWarning className="text-[11px] font-semibold text-gray-400">
+                {formatSelectedDate(false)}
+              </p>
+              <p className="text-xs font-bold text-gray-800">
+                No memories recorded yet
+              </p>
+            </div>
+
+            <Link
+              href="/create"
+              className="shrink-0 px-3.5 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold rounded-xl shadow-sm hover:shadow-md active:scale-95 transition-all flex items-center gap-1 leading-none"
+            >
+              <span>+ Add Memory</span>
+            </Link>
           </motion.div>
         )}
       </AnimatePresence>

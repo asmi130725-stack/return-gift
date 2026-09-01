@@ -5,6 +5,7 @@ import { formatDate } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
+import { parseSoundtrackData, extractSpotifyTrackId, SoundtrackData } from '@/components/music/SpotifySongSelector'
 
 interface EventCardProps {
   event: Event
@@ -13,10 +14,40 @@ interface EventCardProps {
 
 export default function EventCard({ event, onClick }: EventCardProps) {
   const [firstPhotoUrl, setFirstPhotoUrl] = useState<string | null>(null)
+  const [soundtrack, setSoundtrack] = useState<SoundtrackData | null>(() => {
+    if (!event.spotifyUrl) return null
+    return parseSoundtrackData(event.spotifyUrl)
+  })
 
   useEffect(() => {
     fetchFirstPhoto()
   }, [event.id])
+
+  useEffect(() => {
+    if (event.spotifyUrl) {
+      const parsed = parseSoundtrackData(event.spotifyUrl)
+      setSoundtrack(parsed)
+
+      // If Spotify track with generic title, resolve via oEmbed
+      const rawUrl = parsed.url || event.spotifyUrl
+      if (rawUrl && (rawUrl.includes('spotify.com') || rawUrl.startsWith('spotify:')) && (!parsed.title || parsed.title === 'Spotify Track' || parsed.title === 'Linked Song')) {
+        const cleanSpotifyUrl = rawUrl.startsWith('http') ? rawUrl : `https://open.spotify.com/track/${extractSpotifyTrackId(rawUrl)}`
+        fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(cleanSpotifyUrl)}`)
+          .then(res => res.json())
+          .then(oembed => {
+            if (oembed && oembed.title) {
+              setSoundtrack(prev => ({
+                title: oembed.title,
+                artist: oembed.author_name || 'Spotify',
+                artwork: oembed.thumbnail_url || prev?.artwork,
+                url: cleanSpotifyUrl,
+              }))
+            }
+          })
+          .catch(err => console.warn('Spotify oembed error:', err))
+      }
+    }
+  }, [event.spotifyUrl])
 
   async function fetchFirstPhoto() {
     try {
@@ -73,28 +104,39 @@ export default function EventCard({ event, onClick }: EventCardProps) {
         )}
 
         {/* Content - Positioned over image */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 via-black/50 to-transparent">
-          {/* Date Badge */}
-          <div className="inline-block px-2.5 py-0.5 mb-1.5 text-xs font-medium text-white bg-gray-900 bg-opacity-60 rounded-full">
-            {formatDate(event.date)}
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/75 via-black/50 to-transparent">
+          {/* Top Badges Row: Date + Song Title */}
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <div className="inline-block px-2.5 py-0.5 text-[11px] font-medium text-white bg-black/60 backdrop-blur-sm rounded-full">
+              {formatDate(event.date)}
+            </div>
+
+            {soundtrack && (soundtrack.title || soundtrack.url) && (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-black/60 backdrop-blur-sm rounded-full text-white text-[11px] font-medium border border-white/10 shadow-xs">
+                <svg className="w-3 h-3 text-pink-400 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                </svg>
+                <span className="truncate max-w-[160px] text-pink-100 font-semibold">{soundtrack.title || 'Soundtrack'}</span>
+              </div>
+            )}
           </div>
 
           {/* Title */}
-          <h3 className="text-lg font-handwriting font-bold text-white mb-1 line-clamp-1">
+          <h3 className="text-lg font-handwriting font-bold text-white mb-0.5 line-clamp-1">
             {event.title}
           </h3>
 
           {/* Notes/Caption */}
           {(event.notes || event.aiCaption) && (
-            <p className="text-sm text-white/80 line-clamp-1 mb-1">
+            <p className="text-xs sm:text-sm text-white/85 line-clamp-1 mb-1">
               {event.notes || event.aiCaption}
             </p>
           )}
 
           {/* Mood Tag */}
           {event.mood && (
-            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full">
-              <span className="text-xs text-white capitalize">
+            <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full">
+              <span className="text-[11px] text-white capitalize font-medium">
                 {event.mood}
               </span>
               <span className="text-xs">
