@@ -15,6 +15,7 @@ import { compressImage } from '@/lib/compression'
 import toast from 'react-hot-toast'
 import SpotifySongSelector, { extractSpotifyTrackId } from '@/components/music/SpotifySongSelector'
 import SoundtrackPlayer from '@/components/music/SoundtrackPlayer'
+import { fetchWithCache, preloadImages, invalidateCache } from '@/lib/cache'
 
 export default function ScrapbookPage() {
   const params = useParams()
@@ -49,18 +50,14 @@ export default function ScrapbookPage() {
     try {
       setLoading(true)
       
-      // Fetch event details
-      const eventResponse = await fetch(`/api/events/${eventId}`)
-      if (!eventResponse.ok) {
-        throw new Error('Event not found')
-      }
-      const eventData = await eventResponse.json()
+      // Fetch event details with client caching
+      const eventData = await fetchWithCache<{ event: Event }>(`/api/events/${eventId}`)
       setEvent(eventData.event)
       
       // Initialize edit form with event data
       setEditForm({
         title: eventData.event.title,
-        date: eventData.event.date.split('T')[0],
+        date: String(eventData.event.date).split('T')[0],
         notes: eventData.event.notes || '',
         mood: eventData.event.mood || '',
         spotifyUrl: eventData.event.spotifyUrl || '',
@@ -71,13 +68,15 @@ export default function ScrapbookPage() {
         setLayout(eventData.event.layoutStyle)
       }
 
-      // Fetch photos
-      const photosResponse = await fetch(`/api/photos?eventId=${eventId}`)
-      if (!photosResponse.ok) {
-        throw new Error('Failed to fetch photos')
+      // Fetch photos with client caching
+      const photosData = await fetchWithCache<{ photos: Photo[] }>(`/api/photos?eventId=${eventId}`)
+      const loadedPhotos = photosData.photos || []
+      setPhotos(loadedPhotos)
+
+      // Preload images into browser cache immediately so scrapbook and carousel are instant
+      if (loadedPhotos.length > 0) {
+        preloadImages(loadedPhotos.map(p => p.url))
       }
-      const photosData = await photosResponse.json()
-      setPhotos(photosData.photos || [])
     } catch (err) {
       console.error('Error fetching event:', err)
       setError('Failed to load event')
@@ -319,7 +318,9 @@ export default function ScrapbookPage() {
         await Promise.all(photoPromises)
       }
       
-      // Refresh photos and event data
+      // Invalidate cache and refresh photos and event data
+      invalidateCache(event.id)
+      invalidateCache('/api/events')
       await fetchEventData(event.id)
       setEvent(updatedEvent || event)
       setIsEditing(false)
@@ -341,6 +342,7 @@ export default function ScrapbookPage() {
     
     // Save layout preference to database
     if (event) {
+      invalidateCache(event.id)
       try {
         await fetch('/api/events', {
           method: 'PATCH',

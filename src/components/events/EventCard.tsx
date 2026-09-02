@@ -7,56 +7,42 @@ import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { parseSoundtrackData, extractSpotifyTrackId, SoundtrackData } from '@/components/music/SpotifySongSelector'
 
+import { fetchWithCache, preloadImages } from '@/lib/cache'
+
 interface EventCardProps {
   event: Event
   onClick?: () => void
 }
 
 export default function EventCard({ event, onClick }: EventCardProps) {
-  const [firstPhotoUrl, setFirstPhotoUrl] = useState<string | null>(null)
+  const initialPhotoUrl = event.photos?.[0]?.url || null
+  const [firstPhotoUrl, setFirstPhotoUrl] = useState<string | null>(initialPhotoUrl)
   const [soundtrack, setSoundtrack] = useState<SoundtrackData | null>(() => {
     if (!event.spotifyUrl) return null
     return parseSoundtrackData(event.spotifyUrl)
   })
 
   useEffect(() => {
-    fetchFirstPhoto()
-  }, [event.id])
+    if (event.photos?.[0]?.url) {
+      setFirstPhotoUrl(event.photos[0].url)
+    } else {
+      fetchFirstPhoto()
+    }
+  }, [event.id, event.photos])
 
   useEffect(() => {
     if (event.spotifyUrl) {
       const parsed = parseSoundtrackData(event.spotifyUrl)
       setSoundtrack(parsed)
-
-      // If Spotify track with generic title, resolve via oEmbed
-      const rawUrl = parsed.url || event.spotifyUrl
-      if (rawUrl && (rawUrl.includes('spotify.com') || rawUrl.startsWith('spotify:')) && (!parsed.title || parsed.title === 'Spotify Track' || parsed.title === 'Linked Song')) {
-        const cleanSpotifyUrl = rawUrl.startsWith('http') ? rawUrl : `https://open.spotify.com/track/${extractSpotifyTrackId(rawUrl)}`
-        fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(cleanSpotifyUrl)}`)
-          .then(res => res.json())
-          .then(oembed => {
-            if (oembed && oembed.title) {
-              setSoundtrack(prev => ({
-                title: oembed.title,
-                artist: oembed.author_name || 'Spotify',
-                artwork: oembed.thumbnail_url || prev?.artwork,
-                url: cleanSpotifyUrl,
-              }))
-            }
-          })
-          .catch(err => console.warn('Spotify oembed error:', err))
-      }
     }
   }, [event.spotifyUrl])
 
   async function fetchFirstPhoto() {
     try {
-      const response = await fetch(`/api/photos?eventId=${event.id}`)
-      if (response.ok) {
-        const data = await response.json()
-        if (data.photos && data.photos.length > 0) {
-          setFirstPhotoUrl(data.photos[0].url)
-        }
+      const data = await fetchWithCache<{ photos: any[] }>(`/api/photos?eventId=${event.id}`)
+      if (data.photos && data.photos.length > 0) {
+        setFirstPhotoUrl(data.photos[0].url)
+        preloadImages([data.photos[0].url])
       }
     } catch (error) {
       console.error('Error fetching first photo:', error)

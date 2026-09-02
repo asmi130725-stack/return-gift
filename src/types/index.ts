@@ -23,6 +23,7 @@ export interface Event {
   videoUrl?: string
   backgroundMusic?: string
   spotifyUrl?: string
+  photos?: Photo[]
   createdAt: Date
   updatedAt: Date
 }

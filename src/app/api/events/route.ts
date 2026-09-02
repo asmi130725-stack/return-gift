@@ -14,7 +14,14 @@ export async function GET(request: NextRequest) {
     }
 
     const events = await getEvents(userId)
-    return NextResponse.json({ events })
+    return NextResponse.json(
+      { events },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      }
+    )
   } catch (error) {
     console.error('Error fetching events:', error)
     return NextResponse.json(

@@ -5,6 +5,7 @@ import { Photo } from '@/types'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { parseSoundtrackData, extractSpotifyTrackId, SoundtrackData } from '@/components/music/SpotifySongSelector'
+import { preloadImages } from '@/lib/cache'
 
 interface PhotoCarouselProps {
   photos: Photo[]
@@ -37,6 +38,13 @@ export default function PhotoCarousel({
     return parseSoundtrackData(spotifyUrl)
   })
 
+  // Preload all photos into browser cache & memory for instant swiping
+  useEffect(() => {
+    if (photos && photos.length > 0) {
+      preloadImages(photos.map(p => p.url))
+    }
+  }, [photos])
+
   useEffect(() => {
     if (spotifyUrl) {
       const parsed = parseSoundtrackData(spotifyUrl)
@@ -64,18 +72,21 @@ export default function PhotoCarousel({
 
   const imageVariants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0,
+      x: direction > 0 ? '100%' : '-100%',
+      scale: 1,
+      opacity: 1,
     }),
     center: {
       zIndex: 1,
-      x: 0,
+      x: '0%',
+      scale: 1,
       opacity: 1,
     },
     exit: (direction: number) => ({
       zIndex: 0,
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0,
+      x: direction < 0 ? '100%' : '-100%',
+      scale: 1,
+      opacity: 1,
     }),
   }
 
@@ -131,7 +142,14 @@ export default function PhotoCarousel({
     <>
       {/* Standard Scrapbook Carousel Normal View (Fills inner template frame perfectly) */}
       <div className="relative w-full h-full rounded-xl overflow-hidden shadow-xs">
-        <AnimatePresence initial={false} custom={direction} mode="wait">
+        {/* Hidden preloaded adjacent images for instant decoding */}
+        <div className="hidden pointer-events-none" aria-hidden="true">
+          {photos.map((p, idx) => (
+            <img key={p.id || idx} src={p.url} alt="" loading="eager" />
+          ))}
+        </div>
+
+        <AnimatePresence initial={false} custom={direction}>
           <motion.div
             key={currentIndex}
             custom={direction}
@@ -140,11 +158,11 @@ export default function PhotoCarousel({
             animate="center"
             exit="exit"
             transition={{
-              x: { type: 'spring', stiffness: 300, damping: 30 },
+              x: { type: 'tween', ease: [0.32, 0.72, 0, 1], duration: 0.3 },
               opacity: { duration: 0.2 },
             }}
             drag="x"
-            dragElastic={1}
+            dragElastic={0.2}
             dragConstraints={{ left: 0, right: 0 }}
             onDragEnd={(e, { offset, velocity }) => {
               const swipe = swipePower(offset.x, velocity.x)
@@ -170,6 +188,8 @@ export default function PhotoCarousel({
                 src={currentPhoto.url}
                 alt={`Photo ${currentIndex + 1}`}
                 fill
+                unoptimized
+                loading="eager"
                 className="object-cover"
                 priority
               />
@@ -309,8 +329,8 @@ export default function PhotoCarousel({
             </div>
 
             {/* Main Stage: Natural uncropped photo view */}
-            <div className="relative flex-1 flex items-center justify-center p-2 sm:p-4 overflow-hidden">
-              <AnimatePresence initial={false} custom={direction} mode="wait">
+            <div className="relative flex-1 w-full overflow-hidden">
+              <AnimatePresence initial={false} custom={direction}>
                 <motion.div
                   key={`enlarged-${currentIndex}`}
                   custom={direction}
@@ -319,11 +339,10 @@ export default function PhotoCarousel({
                   animate="center"
                   exit="exit"
                   transition={{
-                    x: { type: 'spring', stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.2 },
+                    x: { type: 'tween', ease: [0.32, 0.72, 0, 1], duration: 0.28 },
                   }}
                   drag="x"
-                  dragElastic={0.8}
+                  dragElastic={0.15}
                   dragConstraints={{ left: 0, right: 0 }}
                   onDragEnd={(e, { offset, velocity }) => {
                     const swipe = swipePower(offset.x, velocity.x)
@@ -333,7 +352,7 @@ export default function PhotoCarousel({
                       paginate(-1)
                     }
                   }}
-                  className="relative w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing"
+                  className="absolute inset-0 flex items-center justify-center p-2 sm:p-4 cursor-grab active:cursor-grabbing select-none"
                 >
                   {isCurrentVideo ? (
                     <video
@@ -348,7 +367,9 @@ export default function PhotoCarousel({
                         src={currentPhoto.url}
                         alt={`Photo ${currentIndex + 1}`}
                         fill
-                        className="object-contain drop-shadow-2xl rounded-2xl"
+                        unoptimized
+                        loading="eager"
+                        className="object-contain drop-shadow-2xl rounded-2xl pointer-events-none"
                         priority
                       />
                     </div>

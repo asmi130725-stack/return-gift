@@ -20,18 +20,21 @@ export default function SwipeableGallery({
 
   const slideVariants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0,
+      x: direction > 0 ? '100%' : '-100%',
+      scale: 1,
+      opacity: 1,
     }),
     center: {
       zIndex: 1,
-      x: 0,
+      x: '0%',
+      scale: 1,
       opacity: 1,
     },
     exit: (direction: number) => ({
       zIndex: 0,
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0,
+      x: direction < 0 ? '100%' : '-100%',
+      scale: 1,
+      opacity: 1,
     }),
   }
 
@@ -70,12 +73,12 @@ export default function SwipeableGallery({
             animate="center"
             exit="exit"
             transition={{
-              x: { type: 'spring', stiffness: 300, damping: 30 },
+              x: { type: 'tween', ease: [0.32, 0.72, 0, 1], duration: 0.3 },
               opacity: { duration: 0.2 },
             }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={1}
+            dragElastic={0.2}
             onDragEnd={handleDragEnd}
             className="absolute inset-0"
           >

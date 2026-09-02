@@ -10,20 +10,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export async function getEvents(userId: string) {
   const { data, error } = await supabase
     .from('events')
-    .select('*')
+    .select('*, photos(id, url, order)')
     .eq('user_id', userId)
     .order('date', { ascending: false })
 
   if (error) throw error
   
   // Map database snake_case to camelCase
-  return data.map(event => ({
+  return data.map((event: any) => ({
     ...event,
     userId: event.user_id,
     layoutStyle: event.layout_style,
     colorTheme: event.color_theme,
     aiCaption: event.ai_caption,
     spotifyUrl: event.spotify_url || event.background_music,
+    photos: (event.photos || []).sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)),
     createdAt: event.created_at,
     updatedAt: event.updated_at,
   }))

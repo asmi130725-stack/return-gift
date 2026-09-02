@@ -5,6 +5,7 @@ import { Event } from '@/types'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import ModernCalendar from '@/components/calendar/ModernCalendar'
+import { fetchWithCache, preloadImages } from '@/lib/cache'
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001'
 
@@ -19,18 +20,14 @@ export default function HomePage() {
   async function fetchEvents() {
     try {
       setLoading(true)
-      const response = await fetch('/api/events', {
+      const data = await fetchWithCache<{ events: Event[] }>('/api/events', {
         headers: {
           'x-user-id': DEMO_USER_ID,
         },
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch events')
-      }
-
-      const data = await response.json()
-      setEvents(data.events || [])
+      const loadedEvents = data.events || []
+      setEvents(loadedEvents)
     } catch (err) {
       console.error('Error fetching events:', err)
     } finally {
