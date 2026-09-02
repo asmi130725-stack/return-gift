@@ -36,39 +36,67 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-rose-50/70 via-pink-50/30 to-slate-50 pb-32">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-pink-100 sticky top-0 z-50">
-        <div className="px-4 py-3.5 flex items-center justify-between max-w-lg mx-auto">
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-gradient-to-b from-rose-50/70 via-pink-50/30 to-slate-50 flex flex-col pb-24 md:pb-0">
+      {/* Header - Centered Upper Tab */}
+      <header className="bg-white/90 backdrop-blur-md border-b border-pink-100/80 sticky top-0 z-50 shrink-0 h-16">
+        <div className="relative h-full px-4 sm:px-6 flex items-center justify-between max-w-6xl mx-auto">
+          {/* Brand */}
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             <span className="text-xl">🔖</span>
-            <h1 className="text-2xl font-handwriting font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent uppercase tracking-wider">
+            <span className="text-2xl font-handwriting font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent uppercase tracking-wider">
               Bookmarks
-            </h1>
-          </div>
+            </span>
+          </Link>
+
+          {/* Centered Segmented Navigation Tab (Desktop) */}
+          <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center bg-pink-100/70 p-1 rounded-full border border-pink-200/60 shadow-inner">
+            <Link
+              href="/"
+              className="px-4 py-1.5 text-xs font-bold text-pink-600 bg-white rounded-full shadow-xs flex items-center gap-1.5 transition-all"
+            >
+              <span>📅</span>
+              <span>Calendar</span>
+            </Link>
+            <Link
+              href="/memories"
+              className="px-4 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 rounded-full flex items-center gap-1.5 transition-all"
+            >
+              <span>💝</span>
+              <span>Memories</span>
+            </Link>
+            <Link
+              href="/notifications"
+              className="px-4 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 rounded-full flex items-center gap-1.5 transition-all"
+            >
+              <span>💌</span>
+              <span>Messages</span>
+            </Link>
+          </nav>
+
+          {/* Right Action */}
           <Link
             href="/create"
-            className="inline-flex items-center justify-center gap-1 text-xs font-semibold text-pink-600 bg-pink-50 hover:bg-pink-100 px-3.5 py-1.5 rounded-full border border-pink-200/70 shadow-xs transition-all active:scale-95 text-center leading-none"
+            className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 px-4 py-2 rounded-full shadow-md shadow-pink-500/20 transition-all active:scale-95 text-center shrink-0"
           >
             <span className="text-sm font-bold leading-none -mt-0.5">+</span>
-            <span className="leading-none">New Memory</span>
+            <span>New Memory</span>
           </Link>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="px-4 py-5 max-w-lg mx-auto">
+      {/* Main Content - Single Screen Viewport on Desktop */}
+      <main className="flex-1 lg:overflow-hidden px-4 sm:px-6 lg:px-8 py-4 lg:py-5 max-w-6xl mx-auto w-full flex flex-col justify-center">
         <motion.div
-          initial={{ opacity: 0, y: 15 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 flex items-center justify-between"
+          className="mb-3 lg:mb-4 flex items-center justify-between"
         >
           <div>
-            <h2 className="text-2xl font-handwriting font-bold text-gray-900">
+            <h2 className="text-2xl lg:text-3xl font-handwriting font-bold text-gray-900">
               Your Memory Calendar
             </h2>
             <p className="text-xs text-gray-500 font-medium">
-              Every day with you is a gift
+              Every day with you is a gift 💕
             </p>
           </div>
         </motion.div>
@@ -77,8 +105,8 @@ export default function HomePage() {
         <ModernCalendar events={events} loading={loading} />
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-pink-100/80 z-50">
+      {/* Bottom Navigation (Mobile Only) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-pink-100/80 z-50">
         <div className="grid grid-cols-4 h-16 max-w-lg mx-auto">
           {/* Calendar - Active */}
           <button className="flex flex-col items-center justify-center gap-1 text-pink-600">

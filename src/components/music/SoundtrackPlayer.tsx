@@ -10,7 +10,7 @@ interface SoundtrackPlayerProps {
 
 export default function SoundtrackPlayer({ data }: SoundtrackPlayerProps) {
   const [soundtrack, setSoundtrack] = useState<SoundtrackData>(() => parseSoundtrackData(data))
-  const audioRef = useRef<HTMLAudioElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(30)
@@ -79,9 +79,20 @@ export default function SoundtrackPlayer({ data }: SoundtrackPlayerProps) {
     }
   }, [soundtrack.previewUrl, soundtrack.url, isDragging])
 
+  const playableAudioUrl = soundtrack.previewUrl || (soundtrack.url && (soundtrack.url.endsWith('.mp3') || soundtrack.url.includes('apple') || soundtrack.url.endsWith('.m4a')) ? soundtrack.url : null)
+
   const togglePlay = () => {
-    const audio = audioRef.current
+    let audio = audioRef.current
+    if (!audio && playableAudioUrl) {
+      audio = new Audio(playableAudioUrl)
+      audioRef.current = audio
+    }
     if (!audio) return
+
+    if (!audio.src && playableAudioUrl) {
+      audio.src = playableAudioUrl
+      audio.load()
+    }
 
     if (isPlaying) {
       audio.pause()
@@ -91,12 +102,25 @@ export default function SoundtrackPlayer({ data }: SoundtrackPlayerProps) {
         setIsPlaying(true)
         setHasError(false)
       }).catch(err => {
-        console.warn('Audio play failed:', err)
-        setHasError(true)
+        console.warn('Audio play failed, retrying with fresh element:', err)
+        try {
+          if (playableAudioUrl) {
+            const fallback = new Audio(playableAudioUrl)
+            fallback.play().then(() => {
+              audioRef.current = fallback
+              setIsPlaying(true)
+              setHasError(false)
+            }).catch(e => {
+              console.error('Playback fallback error:', e)
+              setHasError(true)
+            })
+          }
+        } catch {
+          setHasError(true)
+        }
       })
     }
   }
-
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value)
     setCurrentTime(val)
@@ -111,8 +135,6 @@ export default function SoundtrackPlayer({ data }: SoundtrackPlayerProps) {
     const s = Math.floor(secs % 60)
     return `${m}:${s < 10 ? '0' : ''}${s}`
   }
-
-  const playableAudioUrl = soundtrack.previewUrl || (soundtrack.url.endsWith('.mp3') || soundtrack.url.includes('apple') ? soundtrack.url : null)
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0
 

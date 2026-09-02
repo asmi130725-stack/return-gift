@@ -161,7 +161,7 @@ export default function ScrapbookLayout({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative mb-2 bg-gradient-to-r from-pink-50 via-rose-50 to-amber-50 rounded-lg p-2 border border-pink-200"
+          className="relative mb-2 bg-gradient-to-r from-pink-50 via-rose-50 to-amber-50 rounded-lg p-2 border border-pink-200 md:hidden"
         >
           {/* Small Soundtrack Play Button (top-right) */}
           {playableAudioUrl ? (
@@ -222,7 +222,7 @@ export default function ScrapbookLayout({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-2"
+          className="mb-2 md:hidden"
         >
           <p className="text-xs font-serif italic text-center text-rose-700 px-2">
             💝 "{caption}"

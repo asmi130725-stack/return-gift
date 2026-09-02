@@ -386,80 +386,106 @@ export default function ScrapbookPage() {
 
   return (
     <div className="h-screen overflow-hidden bg-gray-50 flex flex-col">
-      {/* Header - Ultra compact for iPhone */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="px-3 py-2">
-          <div className="flex items-center justify-between mb-2">
-            <button onClick={() => router.back()} className="p-1">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            
-            <h1 className="text-2xl font-handwriting font-bold text-pink-600 text-center uppercase flex-1">
-              Bookmarks
-            </h1>
-            
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={handleEdit}
-                className="p-1"
+      {/* Header - Unified Desktop & Mobile */}
+      <header className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shrink-0">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5">
+          <div className="relative flex items-center justify-between">
+            {/* Left: Back Arrow + Brand */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <button
+                onClick={() => router.back()}
+                className="p-1.5 hover:bg-gray-100 rounded-full text-gray-600 transition-colors"
+                title="Back to memories"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              
+              <Link href="/" className="flex items-center gap-1.5">
+                <span className="text-xl">🔖</span>
+                <span className="text-xl sm:text-2xl font-handwriting font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent uppercase tracking-wider">
+                  Bookmarks
+                </span>
+              </Link>
+            </div>
+
+            {/* Desktop View Toggle (Centered in Header Row) */}
+            <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center bg-gray-100/90 p-1 rounded-full border border-gray-200 shadow-inner">
+              <button
+                onClick={() => setView('gallery')}
+                className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all ${
+                  view === 'gallery' ? 'bg-white text-pink-600 shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Gallery
+              </button>
+              <button
+                onClick={() => setView('templates')}
+                className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all ${
+                  view === 'templates' ? 'bg-white text-pink-600 shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Templates
+              </button>
+              <button
+                onClick={() => setView('scrapbook')}
+                className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all ${
+                  view === 'scrapbook' ? 'bg-white text-pink-600 shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Scrapbook
+              </button>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={handleEdit}
+                className="p-1.5 hover:bg-pink-50 rounded-full text-gray-600 hover:text-pink-600 transition-colors"
+                title="Edit memory"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </button>
               
-              <button 
+              <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="p-1 disabled:opacity-50"
+                className="p-1.5 hover:bg-red-50 rounded-full text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
+                title="Delete memory"
               >
-                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
             </div>
           </div>
 
-          {/* View Toggle */}
-          <div className="flex gap-1.5">
+          {/* Mobile View Toggle (Only visible on Mobile < md) */}
+          <div className="md:hidden flex gap-2 mt-2 pt-2 border-t border-gray-100">
             <button
               onClick={() => setView('gallery')}
-              className={`
-                flex-1 px-3 py-1.5 rounded-full font-medium text-sm
-                transition-all
-                ${view === 'gallery'
-                  ? 'bg-pink-600 text-white'
-                  : 'bg-gray-100 text-gray-600'
-                }
-              `}
+              className={`flex-1 px-3 py-1.5 rounded-full font-semibold text-xs transition-all ${
+                view === 'gallery' ? 'bg-pink-600 text-white shadow-xs' : 'bg-gray-100 text-gray-600'
+              }`}
             >
               Gallery
             </button>
             <button
               onClick={() => setView('templates')}
-              className={`
-                flex-1 px-3 py-1.5 rounded-full font-medium text-sm
-                transition-all
-                ${view === 'templates'
-                  ? 'bg-pink-600 text-white'
-                  : 'bg-gray-100 text-gray-600'
-                }
-              `}
+              className={`flex-1 px-3 py-1.5 rounded-full font-semibold text-xs transition-all ${
+                view === 'templates' ? 'bg-pink-600 text-white shadow-xs' : 'bg-gray-100 text-gray-600'
+              }`}
             >
               Templates
             </button>
             <button
               onClick={() => setView('scrapbook')}
-              className={`
-                flex-1 px-3 py-1.5 rounded-full font-medium text-sm
-                transition-all
-                ${view === 'scrapbook'
-                  ? 'bg-pink-600 text-white'
-                  : 'bg-gray-100 text-gray-600'
-                }
-              `}
+              className={`flex-1 px-3 py-1.5 rounded-full font-semibold text-xs transition-all ${
+                view === 'scrapbook' ? 'bg-pink-600 text-white shadow-xs' : 'bg-gray-100 text-gray-600'
+              }`}
             >
               Scrapbook
             </button>
@@ -468,13 +494,14 @@ export default function ScrapbookPage() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto px-3 py-3">
+      <main className="flex-1 overflow-y-auto md:overflow-hidden px-3 py-3 md:px-6 md:py-4 max-w-6xl mx-auto w-full flex flex-col justify-center">
         {view === 'gallery' && (
           <motion.div
             key="gallery"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="max-w-2xl mx-auto w-full"
           >
             {photos.length > 0 ? (
               <>
@@ -484,7 +511,7 @@ export default function ScrapbookPage() {
                 />
 
                 {/* AI Actions */}
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex gap-2 justify-center">
                   <AIGenerateButton
                     onGenerate={handleRegenerateCaption}
                     label={generatingCaption ? "Generating..." : "Generate Quote"}
@@ -506,12 +533,13 @@ export default function ScrapbookPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="overflow-y-auto max-h-[calc(100vh-6rem)] w-full py-2"
           >
-            <div className="mb-4">
-              <h2 className="text-lg font-bold text-gray-800 mb-1">
+            <div className="mb-4 text-center">
+              <h2 className="text-xl font-bold text-gray-800 mb-1">
                 Choose Your Layout
               </h2>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 text-xs sm:text-sm">
                 Select a template that best fits your memory
               </p>
             </div>
@@ -529,47 +557,119 @@ export default function ScrapbookPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="w-full h-full"
           >
             {photos.length > 0 ? (
               <>
-                <ScrapbookLayout
-                  photos={photos}
-                  layoutStyle={layout}
-                  theme={(event.mood as any) || 'romantic'}
-                  caption={event.aiCaption || ''}
-                  eventTitle={event.title}
-                  eventDate={new Date(event.date).toISOString()}
-                  eventNotes={event.notes}
-                  eventMood={event.mood}
-                  spotifyUrl={event.spotifyUrl}
-                />
-
-                {/* Linked Spotify Soundtrack Player */}
-                {event.spotifyUrl && (
-                  <SoundtrackPlayer data={event.spotifyUrl} />
-                )}
-
-                {/* Actions */}
-                <div className="mt-2 flex flex-col sm:flex-row gap-1.5">
-                  <button
-                    onClick={() => setView('templates')}
-                    className="flex-1 px-3 py-1.5 rounded-full font-medium text-xs bg-white border border-pink-600 text-pink-600 hover:bg-pink-50 transition-colors"
-                  >
-                    Change Template
-                  </button>
-                  <AIGenerateButton
-                    onGenerate={handleRegenerateCaption}
-                    label={generatingCaption ? "Generating..." : "Generate Quote"}
-                    disabled={generatingCaption}
-                    variant="secondary"
+                {/* Mobile View: Vertical Stack */}
+                <div className="md:hidden space-y-2.5 pb-16">
+                  <ScrapbookLayout
+                    photos={photos}
+                    layoutStyle={layout}
+                    theme={(event.mood as any) || 'romantic'}
+                    caption={event.aiCaption || ''}
+                    eventTitle={event.title}
+                    eventDate={new Date(event.date).toISOString()}
+                    eventNotes={event.notes}
+                    eventMood={event.mood}
+                    spotifyUrl={event.spotifyUrl}
                   />
+
+                  {/* Linked Spotify Soundtrack Player */}
+                  {event.spotifyUrl && (
+                    <SoundtrackPlayer data={event.spotifyUrl} />
+                  )}
+
+                  {/* Actions */}
+                  <div className="mt-2 flex flex-col sm:flex-row gap-1.5">
+                    <button
+                      onClick={() => setView('templates')}
+                      className="flex-1 px-3 py-2 rounded-full font-medium text-xs bg-white border border-pink-600 text-pink-600 hover:bg-pink-50 transition-colors"
+                    >
+                      🎨 Change Template
+                    </button>
+                    <AIGenerateButton
+                      onGenerate={handleRegenerateCaption}
+                      label={generatingCaption ? "Generating..." : "Generate Quote"}
+                      disabled={generatingCaption}
+                      variant="secondary"
+                    />
+                  </div>
                 </div>
 
-                {/* Current Layout Info */}
-                <div className="mt-2 text-center pb-2">
-                  <p className="text-xs text-gray-500">
-                    Current template: <span className="font-medium capitalize">{layout}</span>
-                  </p>
+                {/* Desktop View: Side-by-Side Landscape Studio (No Vertical Scroll) */}
+                <div className="hidden md:flex items-center justify-center gap-8 lg:gap-12 h-full max-h-[calc(100vh-5.5rem)] w-full">
+                  {/* Left: Perfectly Fitted Scrapbook Frame */}
+                  <div className="flex-1 h-full max-h-[calc(100vh-6.5rem)] flex items-center justify-center">
+                    <ScrapbookLayout
+                      photos={photos}
+                      layoutStyle={layout}
+                      theme={(event.mood as any) || 'romantic'}
+                      caption={event.aiCaption || ''}
+                      eventTitle={event.title}
+                      eventDate={new Date(event.date).toISOString()}
+                      eventNotes={event.notes}
+                      eventMood={event.mood}
+                      spotifyUrl={event.spotifyUrl}
+                    />
+                  </div>
+
+                  {/* Right: Studio Sidebar (Details, Music, Actions) */}
+                  <div className="w-80 lg:w-96 flex flex-col justify-center space-y-4 shrink-0">
+                    {/* Memory Card */}
+                    <div className="bg-gradient-to-br from-pink-50 via-rose-50 to-amber-50 rounded-2xl p-5 border border-pink-200/80 shadow-md shadow-pink-500/5">
+                      <h2 className="text-xl font-handwriting font-bold text-gray-900 mb-1 leading-tight">
+                        {event.title}
+                      </h2>
+                      <p className="text-xs text-gray-500 mb-2">
+                        📅 {new Date(event.date).toLocaleDateString('en-US', { 
+                          month: 'long', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        })}
+                      </p>
+                      {event.mood && (
+                        <span className="inline-block text-xs font-semibold px-2.5 py-0.5 bg-pink-100 text-pink-700 rounded-full mb-3">
+                          {event.mood.charAt(0).toUpperCase() + event.mood.slice(1)} Memory
+                        </span>
+                      )}
+                      {event.notes && (
+                        <p className="text-xs text-gray-700 italic font-serif leading-relaxed bg-white/70 p-3 rounded-xl border border-pink-100">
+                          "{event.notes}"
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Spotify Soundtrack Player */}
+                    {event.spotifyUrl && (
+                      <SoundtrackPlayer data={event.spotifyUrl} />
+                    )}
+
+                    {/* AI Love Quote */}
+                    {event.aiCaption && (
+                      <div className="bg-white rounded-2xl p-4 border border-pink-100 shadow-xs">
+                        <p className="text-xs font-serif italic text-rose-700 leading-relaxed">
+                          💝 "{event.aiCaption}"
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setView('templates')}
+                        className="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs bg-white border border-pink-500 text-pink-600 hover:bg-pink-50 shadow-xs transition-all active:scale-95 text-center"
+                      >
+                        🎨 Change Template
+                      </button>
+                      <AIGenerateButton
+                        onGenerate={handleRegenerateCaption}
+                        label={generatingCaption ? "Generating..." : "Generate Quote"}
+                        disabled={generatingCaption}
+                        variant="secondary"
+                      />
+                    </div>
+                  </div>
                 </div>
               </>
             ) : (

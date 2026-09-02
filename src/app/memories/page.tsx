@@ -1,26 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import EventCard from '@/components/events/EventCard'
 import { Event } from '@/types'
+import EventCard from '@/components/events/EventCard'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-
 import { fetchWithCache, preloadImages } from '@/lib/cache'
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001'
 
 export default function MemoriesPage() {
-  const router = useRouter()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchEvents()
-    
-    // Refresh events when page becomes visible (when user comes back)
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         fetchEvents()
@@ -54,40 +51,70 @@ export default function MemoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-pink-100 sticky top-0 z-50">
-        <div className="px-4 py-3.5 flex items-center justify-between max-w-lg mx-auto">
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-gray-50 pb-24 md:pb-16 flex flex-col">
+      {/* Header - Centered Upper Tab */}
+      <header className="bg-white/90 backdrop-blur-md border-b border-pink-100/80 sticky top-0 z-50 shrink-0 h-16">
+        <div className="relative h-full px-4 sm:px-6 flex items-center justify-between max-w-6xl mx-auto">
+          {/* Brand */}
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             <span className="text-xl">🔖</span>
-            <h1 className="text-2xl font-handwriting font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent uppercase tracking-wider">
+            <span className="text-2xl font-handwriting font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent uppercase tracking-wider">
               Bookmarks
-            </h1>
-          </div>
+            </span>
+          </Link>
+
+          {/* Centered Segmented Navigation Tab (Desktop) */}
+          <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center bg-pink-100/70 p-1 rounded-full border border-pink-200/60 shadow-inner">
+            <Link
+              href="/"
+              className="px-4 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 rounded-full flex items-center gap-1.5 transition-all"
+            >
+              <span>📅</span>
+              <span>Calendar</span>
+            </Link>
+            <Link
+              href="/memories"
+              className="px-4 py-1.5 text-xs font-bold text-pink-600 bg-white rounded-full shadow-xs flex items-center gap-1.5 transition-all"
+            >
+              <span>💝</span>
+              <span>Memories</span>
+            </Link>
+            <Link
+              href="/notifications"
+              className="px-4 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 rounded-full flex items-center gap-1.5 transition-all"
+            >
+              <span>💌</span>
+              <span>Messages</span>
+            </Link>
+          </nav>
+
+          {/* Right Action */}
           <Link
             href="/create"
-            className="inline-flex items-center justify-center gap-1 text-xs font-semibold text-pink-600 bg-pink-50 hover:bg-pink-100 px-3.5 py-1.5 rounded-full border border-pink-200/70 shadow-xs transition-all active:scale-95 text-center leading-none"
+            className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 px-4 py-2 rounded-full shadow-md shadow-pink-500/20 transition-all active:scale-95 text-center shrink-0"
           >
             <span className="text-sm font-bold leading-none -mt-0.5">+</span>
-            <span className="leading-none">New Memory</span>
+            <span>New Memory</span>
           </Link>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="px-4 py-4 max-w-lg mx-auto">
+      <main className="px-4 sm:px-6 py-6 max-w-6xl mx-auto w-full flex-1">
         {/* Page Title */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4"
+          className="mb-6 flex items-center justify-between"
         >
-          <h2 className="text-2xl font-handwriting text-gray-900 mb-1">
-            Your Memories
-          </h2>
-          <p className="text-sm text-gray-600">
-            {loading ? 'Loading...' : `${events.length} beautiful moment${events.length !== 1 ? 's' : ''} captured`}
-          </p>
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-handwriting font-bold text-gray-900 mb-1">
+              Your Memories
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-600 font-medium">
+              {loading ? 'Loading moments...' : `${events.length} beautiful moment${events.length !== 1 ? 's' : ''} captured`}
+            </p>
+          </div>
         </motion.div>
 
         {/* Loading State */}
@@ -114,17 +141,17 @@ export default function MemoriesPage() {
           </motion.div>
         )}
 
-        {/* Events Grid */}
+        {/* Events Grid (1-Col on Mobile, 2-3 Col Grid on Desktop) */}
         {!loading && !error && events.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
             {events.map((event, index) => (
               <motion.div
                 key={event.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.05 }}
               >
-                <Link href={`/scrapbook/${event.id}`}>
+                <Link href={`/scrapbook/${event.id}`} className="block h-full">
                   <EventCard event={event} />
                 </Link>
               </motion.div>
@@ -137,31 +164,25 @@ export default function MemoriesPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-20"
+            className="text-center py-20 bg-white rounded-3xl border border-pink-100 p-8 max-w-md mx-auto"
           >
-            <div className="w-32 h-32 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-3">
-              No memories yet
-            </h3>
-            <p className="text-gray-500 mb-6">
-              Create your first memory to get started
+            <span className="text-4xl mb-3 block">📸</span>
+            <h3 className="text-lg font-bold text-gray-800 mb-1">No memories captured yet</h3>
+            <p className="text-xs text-gray-500 mb-5">
+              Start building your relationship scrapbook by creating your first memory together!
             </p>
             <Link
               href="/create"
-              className="inline-block px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+              className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold rounded-full shadow-md shadow-pink-500/20 hover:shadow-lg transition-all inline-block"
             >
-              Create Memory
+              + Create First Memory
             </Link>
           </motion.div>
         )}
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-pink-100/80 z-50">
+      {/* Bottom Navigation (Mobile Only) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-pink-100/80 z-50">
         <div className="grid grid-cols-4 h-16 max-w-lg mx-auto">
           {/* Calendar */}
           <Link href="/" className="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-pink-600 transition-colors">
