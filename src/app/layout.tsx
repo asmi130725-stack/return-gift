@@ -58,6 +58,25 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${lora.variable} ${caveat.variable} ${dancing.variable}`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.addEventListener('error', function(e) {
+                if ((e.filename && e.filename.indexOf('chrome-extension://') !== -1) ||
+                    (e.error && e.error.stack && e.error.stack.indexOf('chrome-extension://') !== -1)) {
+                  e.stopImmediatePropagation();
+                }
+              }, true);
+              window.addEventListener('unhandledrejection', function(e) {
+                if (e.reason && e.reason.stack && e.reason.stack.indexOf('chrome-extension://') !== -1) {
+                  e.stopImmediatePropagation();
+                }
+              }, true);
+            `,
+          }}
+        />
+      </head>
       <body className="font-sans antialiased bg-gray-50">
         <Toaster 
           position="top-center"

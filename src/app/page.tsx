@@ -49,22 +49,13 @@ export default function HomePage() {
               Bookmarks
             </h1>
           </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/notifications"
-              className="inline-flex items-center justify-center p-2 text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-full border border-pink-200/70 shadow-xs transition-all active:scale-95"
-              title="Secret Messages & Letters"
-            >
-              <span className="text-base">💌</span>
-            </Link>
-            <Link
-              href="/create"
-              className="inline-flex items-center justify-center gap-1 text-xs font-semibold text-pink-600 bg-pink-50 hover:bg-pink-100 px-3.5 py-1.5 rounded-full border border-pink-200/70 shadow-xs transition-all active:scale-95 text-center leading-none"
-            >
-              <span className="text-sm font-bold leading-none -mt-0.5">+</span>
-              <span className="leading-none">New Memory</span>
-            </Link>
-          </div>
+          <Link
+            href="/create"
+            className="inline-flex items-center justify-center gap-1 text-xs font-semibold text-pink-600 bg-pink-50 hover:bg-pink-100 px-3.5 py-1.5 rounded-full border border-pink-200/70 shadow-xs transition-all active:scale-95 text-center leading-none"
+          >
+            <span className="text-sm font-bold leading-none -mt-0.5">+</span>
+            <span className="leading-none">New Memory</span>
+          </Link>
         </div>
       </header>
 
